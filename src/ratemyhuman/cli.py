@@ -1,11 +1,13 @@
 """
 Command-line interface for ratemyhuman.
 
-Provides the ``push`` subcommand that automates the DVC + git ingest-and-push
-workflow, including pre-commit hook retry logic.
+Provides subcommands for classification, exploration, validation,
+and the DVC + git push workflow.
 """
+import logging
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -132,10 +134,97 @@ def _auto_commit_message(dvc_files: list[str]) -> str:
 
 
 @click.group(context_settings={"max_content_width": shutil.get_terminal_size().columns})
-def cli() -> None:
-    """RateMyHuman: CLI tools."""
+@click.option("-v", "--verbose", is_flag=True, help="Enable debug logging")
+def cli(verbose: bool) -> None:
+    """RateMyHuman: facial valence detection CLI."""
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
 
+# -------------------------------------------------------------------
+# classify
+# -------------------------------------------------------------------
+@cli.command("classify")
+@click.argument("image", type=click.Path(exists=True, dir_okay=False))
+@click.option("--device", default=None, help="Force device (cuda / cpu)")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def classify_cmd(image: str, device: str | None, as_json: bool) -> None:
+    """
+    Classifies the valence of a face in IMAGE.
+
+    Runs the full pipeline: face detection -> emotion inference -> valence mapping.
+    """
+    from ratemyhuman.model import ValenceDetector
+    try:
+        detector = ValenceDetector(device=device)
+        result = detector.classify(image)
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(click.style(f"Error: {exc}", fg="red"), err=True)
+        raise SystemExit(1)
+    if as_json:
+        import json
+        click.echo(json.dumps({
+            "label": result.label,
+            "confidence": round(result.confidence, 4),
+            "emotion_scores": {k: round(v, 4) for k, v in result.emotion_scores.items()},
+            "valence_scores": {k: round(v, 4) for k, v in result.valence_scores.items()},
+        }, indent=2))
+    else:
+        click.echo(result)
+        click.echo(f"  Emotions: { {k: round(v, 4) for k, v in result.emotion_scores.items()} }")
+        click.echo(f"  Valence:  { {k: round(v, 4) for k, v in result.valence_scores.items()} }")
+
+
+# -------------------------------------------------------------------
+# explore
+# -------------------------------------------------------------------
+@cli.command("explore")
+@click.option("--data-dir", type=click.Path(exists=True, file_okay=False), default=None,
+              help="Dataset root (default: data/)")
+@click.option("--output-dir", type=click.Path(file_okay=False), default=None,
+              help="Output directory for plots (default: docs/)")
+def explore_cmd(data_dir: str | None, output_dir: str | None) -> None:
+    """
+    Explores the FER2013 dataset.
+
+    Produces class/valence distribution stats, sample grids, and integrity checks.
+    """
+    from ratemyhuman.explore import run_exploration
+    run_exploration(
+        data_dir=Path(data_dir) if data_dir else None,
+        output_dir=Path(output_dir) if output_dir else None,
+    )
+    click.echo(click.style("\n✓ Exploration complete.", fg="green"))
+
+
+# -------------------------------------------------------------------
+# validate
+# -------------------------------------------------------------------
+@cli.command("validate")
+@click.option("--data-dir", type=click.Path(exists=True, file_okay=False), default=None,
+              help="Test split directory (default: data/test/)")
+@click.option("--output-dir", type=click.Path(file_okay=False), default=None,
+              help="Output directory for plots (default: docs/)")
+@click.option("--split", default="test", help="Dataset split to validate on")
+def validate_cmd(data_dir: str | None, output_dir: str | None, split: str) -> None:
+    """
+    Validates the pipeline on labelled data.
+
+    Runs batch inference on all images in the split, computes metrics
+    (accuracy, F1, MCC, confusion matrix), and saves plots.
+    """
+    from ratemyhuman.validate import run_validation
+    run_validation(
+        data_dir=Path(data_dir) if data_dir else None,
+        output_dir=Path(output_dir) if output_dir else None,
+        split=split,
+    )
+    click.echo(click.style("\n✓ Validation complete.", fg="green"))
+
+
+# -------------------------------------------------------------------
+# push (DVC + git workflow)
+# -------------------------------------------------------------------
 @cli.command("push")
 @click.option("--message", "-m", default=None, help="Custom commit message")
 @click.option("--dry-run", is_flag=True, help="Preview without making changes")

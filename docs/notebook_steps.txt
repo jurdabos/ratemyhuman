@@ -1,27 +1,265 @@
-1 Data gathering
-```
+Facial Valence Detection — Notebook Runbook
+=============================================
+Each section below maps to one or more Jupyter cells.
+Blocks marked ```python are Python cells; blocks marked ```shell are terminal cells.
+Expected output is shown in plain ``` blocks immediately after.
+
+
+1  Data gathering
+-----------------
+Download the FER-2013 dataset from Kaggle (requires API credentials).
+
+```shell
 $env:KAGGLE_USERNAME = "your_kaggle_username"
-```
-```
 $env:KAGGLE_KEY = "your_api_key"
-```
-```
 kaggle datasets list -s "FER-2013 facial expression reorganized" --sort-by votes
-```
-```
 kaggle datasets download pankaj4321/fer-2013-facial-expression-dataset -p C:\acidvuca\ratemyhuman\data --unzip
 ```
 
-2 Exploration
+The dataset contains ~35,887 grayscale 48x48 images split into train/, val/, test/
+with 7 emotion subdirectories each: Angry, Disgust, Fear, Happy, Neutral, Sad, Surprise.
+
+
+2  Exploration
+--------------
+2.1  Count images per class and split:
+
+```shell
+Get-ChildItem C:\acidvuca\ratemyhuman\data\train -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="train"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }
+Get-ChildItem C:\acidvuca\ratemyhuman\data\test -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="test"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }
 ```
+
+2.2  Run the exploration module (produces distribution plots, sample grids, integrity report):
+
+```python
+from ratemyhuman.explore import run_exploration
+run_exploration()
 ```
-Get-ChildItem C:\acidvuca\ratemyhuman\data\train -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="train"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }; Get-ChildItem C:\acidvuca\ratemyhuman\data\val -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="val"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }; Get-ChildItem C:\acidvuca\ratemyhuman\data\test -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="test"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }
-```
-```
-uv run python -m ratemyhuman.explore
-```
-```
+
+Outputs saved to docs/: class_distribution.png, valence_distribution.png, sample_grid_train.png, sample_grid_test.png.
+
+
+3  GPU environment verification
+--------------------------------
+```shell
 nvidia-smi --query-gpu=name,compute_cap,driver_version --format=csv,noheader
 ```
 ```
-The pyproject.toml is configured with the nightly index, prerelease = "allow", unsafe-best-match, and overrides for facenet-pytorch's stale dependency pins. Ready for the model integration phase.
+NVIDIA GeForce RTX 5070 Ti Laptop GPU, 12.0, 572.83
+```
+
+```python
+import torch
+print(f"PyTorch: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+print(f"Device: {torch.cuda.get_device_name(0)}")
+```
+```
+PyTorch: 2.12.0.dev20260324+cu128
+CUDA available: True
+Device: NVIDIA GeForce RTX 5070 Ti Laptop GPU
+```
+
+The pyproject.toml uses the nightly PyTorch index (cu128), prerelease = "allow",
+unsafe-best-match, and overrides for facenet-pytorch's stale dependency pins.
+
+
+4  Integrate pretrained model
+-----------------------------
+```shell
+uv add transformers
+```
+
+The pretrained ViT emotion model (trpakov/vit-face-expression) is a Vision Transformer
+fine-tuned on FER2013 for 7-class emotion recognition (85.8M params, ~71% test accuracy).
+It outputs softmax probabilities for: Angry, Disgust, Fear, Happy, Neutral, Sad, Surprise.
+
+4.1  Initialise the detector:
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+from ratemyhuman.model import ValenceDetector
+detector = ValenceDetector()
+```
+```
+INFO: Initialising ValenceDetector on cuda
+INFO: Loaded emotion model: trpakov/vit-face-expression (85.8M params)
+```
+
+4.2  Classify a single image:
+
+```python
+import glob
+img_path = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\Happy\*.png")[0]
+result = detector.classify(img_path)
+print(result)
+print(f"Emotion breakdown: { {k: round(v, 4) for k, v in result.emotion_scores.items()} }")
+print(f"Valence breakdown: { {k: round(v, 4) for k, v in result.valence_scores.items()} }")
+```
+```
+Valence: Positive (99.5%) | Top emotion: Happy (99.3%)
+Emotion breakdown: {'Angry': 0.0002, 'Disgust': 0.0004, 'Fear': 0.0003, 'Happy': 0.9933, 'Neutral': 0.0036, 'Sad': 0.0005, 'Surprise': 0.0017}
+Valence breakdown: {'Negative': 0.0014, 'Neutral': 0.0036, 'Positive': 0.9951}
+```
+
+4.3  Spot-check across multiple emotion classes:
+
+```python
+for emotion in ["Angry", "Sad", "Fear", "Surprise", "Neutral"]:
+    imgs = glob.glob(rf"C:\acidvuca\ratemyhuman\data\test\{emotion}\*.png")
+    if imgs:
+        try:
+            result = detector.classify(imgs[0])
+            print(f"{emotion:>10s} -> {result}")
+        except ValueError as e:
+            print(f"{emotion:>10s} -> {e}")
+```
+```
+     Angry -> Valence: Negative (99.6%) | Top emotion: Angry (98.4%)
+       Sad -> Valence: Negative (96.0%) | Top emotion: Sad (64.1%)
+      Fear -> Valence: Negative (99.1%) | Top emotion: Fear (92.1%)
+  Surprise -> No face detected in 32299.png
+   Neutral -> Valence: Negative (99.6%) | Top emotion: Fear (98.4%)
+```
+
+Note: MTCNN may fail on some 48x48 FER2013 images (designed for higher-res input).
+The Neutral misclassification reflects FER2013's known label noise (~65% inter-annotator agreement).
+These are single-image spot checks showing the pipeline works end-to-end;
+systematic quality is measured in step 6 (validation).
+
+
+5  Build valence mapping layer
+------------------------------
+The valence mapping (concept note s2.3) is the single source of truth in model.py:
+- Negative = Angry + Disgust + Fear + Sad
+- Neutral  = Neutral
+- Positive = Happy + Surprise
+
+5.1  Probability aggregation (inference-time):
+
+```python
+import numpy as np
+from ratemyhuman.model import ValenceDetector
+fake_probs = np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03])
+result = ValenceDetector.map_to_valence(fake_probs)
+print(result)
+print(f"Valence scores: {result.valence_scores}")
+```
+```
+Valence: Positive (93.0%) | Top emotion: Happy (90.0%)
+Valence scores: {'Negative': 0.04, 'Neutral': 0.03, 'Positive': 0.93}
+```
+
+5.2  Ground-truth label mapping (for FER2013 folder names -> valence):
+
+```python
+from pathlib import Path
+from ratemyhuman.model import map_label_to_valence
+data_dir = Path(r"C:\acidvuca\ratemyhuman\data\test")
+for folder in sorted(data_dir.iterdir()):
+    if folder.is_dir():
+        valence = map_label_to_valence(folder.name)
+        count = len(list(folder.glob("*.png")))
+        print(f"{folder.name:>10s} -> {valence:<10s} ({count:,} images)")
+```
+```
+     Angry -> Negative   (491 images)
+   Disgust -> Negative   (55 images)
+      Fear -> Negative   (528 images)
+     Happy -> Positive   (879 images)
+   Neutral -> Neutral    (626 images)
+       Sad -> Negative   (594 images)
+  Surprise -> Positive   (416 images)
+```
+
+The function is case-insensitive and strips whitespace.
+All constants (VALENCE_MAP, VALENCE_ORDER, VALENCE_COLOURS, EMOTION_PALETTE)
+are defined in model.py and imported by all other modules — no duplication.
+
+
+6  Validation
+-------------
+The validation module (validate.py) implements the process from concept note s4.4:
+load dataset -> map ground truth -> batch inference -> compute metrics -> generate plots.
+Metrics are computed using scikit-learn.
+
+6.1  Run the full validation on the FER2013 test set (3,589 images):
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+from ratemyhuman.validate import run_validation
+report = run_validation()
+```
+```
+============================================================
+Validation Report  (2999 evaluated, 590 skipped / 3589 total)
+============================================================
+  Accuracy:          0.8286
+  F1 (macro):        0.8032
+  F1 (weighted):     0.8279
+  MCC:               0.7277
+  Random baseline:   0.3333
+  Majority baseline: 0.4415
+
+  Per-class metrics:
+    Negative    P=0.815  R=0.850  F1=0.833  N=1324
+    Neutral     P=0.703  R=0.658  F1=0.680  N=562
+    Positive    P=0.906  R=0.889  F1=0.897  N=1113
+
+  Confusion matrix (rows=true, cols=pred):
+              Negative   Neutral  Positive
+    Negative      1126       126        72
+     Neutral       161       370        31
+    Positive        94        30       989
+```
+
+590 images (16.4%) were skipped because MTCNN could not detect a face in the 48x48 images.
+Of the 2,999 successfully processed images:
+- Accuracy (82.86%) far exceeds random (33.3%) and majority (44.2%) baselines
+- Positive class performs best (F1=0.897); Neutral is hardest (F1=0.680)
+- MCC of 0.7277 confirms strong multi-class discrimination
+
+6.2  Display the confusion matrix heatmap (saved by run_validation):
+
+```python
+from IPython.display import Image, display
+display(Image(filename="docs/confusion_matrix.png"))
+```
+
+6.3  Display the misclassified samples grid:
+
+```python
+display(Image(filename="docs/misclassified_samples.png"))
+```
+
+6.4  Programmatic access to the validation API:
+
+```python
+from ratemyhuman.model import ValenceDetector
+from ratemyhuman.validate import ValidationRunner
+detector = ValenceDetector()
+runner = ValidationRunner(detector, r"C:\acidvuca\ratemyhuman\data\test")
+report = runner.run_validation()
+print(f"Accuracy: {report.accuracy:.1%}")
+print(f"Confusion matrix:\n{report.confusion_matrix}")
+print(f"Misclassified examples: {len(report.misclassified)}")
+```
+
+
+7  Tests
+--------
+```shell
+uv run pytest tests/ -v -m "not slow"
+```
+```
+39 passed in 4.85s
+```
+
+```shell
+uv run pytest tests/ -v -m "slow"
+```
+```
+3 passed in 7.20s
+```

@@ -13,34 +13,17 @@ import numpy as np
 import seaborn as sns
 from PIL import Image
 
+from ratemyhuman.model import (
+    EMOTION_LABELS as EMOTION_CLASSES,
+    EMOTION_PALETTE,
+    VALENCE_COLOURS,
+    VALENCE_MAP,
+)
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# Canonical emotion classes in FER-2013 (folder names)
-EMOTION_CLASSES: list[str] = ["Angry", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Surprise"]
 SPLITS: list[str] = ["train", "val", "test"]
-
-# Valence mapping per concept note §2.3
-VALENCE_MAP: dict[str, str] = {
-    "Angry": "Negative",
-    "Disgust": "Negative",
-    "Fear": "Negative",
-    "Sad": "Negative",
-    "Neutral": "Neutral",
-    "Happy": "Positive",
-    "Surprise": "Positive",
-}
-
-VALENCE_COLOURS: dict[str, str] = {
-    "Negative": "#A24936",
-    "Neutral": "#7EBCE6",
-    "Positive": "#DBF4A7",
-}
-
-EMOTION_PALETTE: list[str] = [
-    "#A24936", "#A24936", "#A24936", "#DBF4A7",
-    "#7EBCE6", "#A24936", "#DBF4A7",
-]
 
 
 def _find_project_root() -> Path:

@@ -14,6 +14,7 @@ dependencies = [
     "seaborn>=0.13.2",
     "torch==2.12.0.dev20260324+cu128",
     "torchvision==0.26.0.dev20260324+cu128",
+    "transformers>=5.3.0",
 ]
 
 [project.scripts]
@@ -47,3 +48,11 @@ url = "https://download.pytorch.org/whl/nightly/cu128"
 [tool.uv.sources]
 torch = { index = "pytorch-cu128" }
 torchvision = { index = "pytorch-cu128" }
+
+[tool.pytest.ini_options]
+markers = ["slow: marks tests that require GPU and model weights (deselect with '-m \"not slow\"')"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
