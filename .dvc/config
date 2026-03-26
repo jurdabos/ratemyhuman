@@ -1,0 +1,5 @@
+[core]
+    remote = s3remote
+['remote "s3remote"']
+    url = s3://ratemyhuman-store/dvc-store
+    region = eu-south-2

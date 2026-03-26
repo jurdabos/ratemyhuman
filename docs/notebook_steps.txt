@@ -1,0 +1,27 @@
+1 Data gathering
+```
+$env:KAGGLE_USERNAME = "your_kaggle_username"
+```
+```
+$env:KAGGLE_KEY = "your_api_key"
+```
+```
+kaggle datasets list -s "FER-2013 facial expression reorganized" --sort-by votes
+```
+```
+kaggle datasets download pankaj4321/fer-2013-facial-expression-dataset -p C:\acidvuca\ratemyhuman\data --unzip
+```
+
+2 Exploration
+```
+```
+Get-ChildItem C:\acidvuca\ratemyhuman\data\train -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="train"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }; Get-ChildItem C:\acidvuca\ratemyhuman\data\val -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="val"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }; Get-ChildItem C:\acidvuca\ratemyhuman\data\test -Recurse -File | Group-Object Directory | ForEach-Object { [PSCustomObject]@{Split="test"; Class=$_.Name.Split('\')[-1]; Count=$_.Count} }
+```
+```
+uv run python -m ratemyhuman.explore
+```
+```
+nvidia-smi --query-gpu=name,compute_cap,driver_version --format=csv,noheader
+```
+```
+The pyproject.toml is configured with the nightly index, prerelease = "allow", unsafe-best-match, and overrides for facenet-pytorch's stale dependency pins. Ready for the model integration phase.

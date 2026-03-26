@@ -1,0 +1,19 @@
+
+1. None Python type hints:
+
+In the concept note's class diagram, methods like launch(), demo_single_image(), and show_validation_report() return None because they perform side effects (launching a server, displaying output, printing a report) without returning a value.
+
+This matches the Mermaid UML convention of +method_name(params) ReturnType — None is the return type, not a placeholder.
+
+
+2. BoundingBox
+
+It represents the bounding box coordinates (+ landmarks + confidence) returned by MTCNN's face detection. In practice this would be a tuple, NamedTuple, or numpy array of coordinates.
+
+
+3. EmotionVector
+
+This is the 7-dimensional softmax probability vector from the emotion CNN. In practice this will be a numpy.ndarray or torch.Tensor of shape (7,).
+
+
+BoundingBox and EmotionVector here are diagram-level abstractions to communicate intent without committing to a concrete implementation type yet. When we implement, we would either define them as type aliases / dataclasses or just use the underlying types directly (e.g. np.ndarray).

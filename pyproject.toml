@@ -1,7 +1,49 @@
 [project]
 name = "ratemyhuman"
 version = "0.1.0"
-description = "Add your description here"
+description = "Facial valence detection from human face images"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "click>=8.1",
+    "facenet-pytorch>=2.6.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.1",
+    "pillow>=12.1.1",
+    "scikit-learn>=1.6",
+    "seaborn>=0.13.2",
+    "torch==2.12.0.dev20260324+cu128",
+    "torchvision==0.26.0.dev20260324+cu128",
+]
+
+[project.scripts]
+ratemyhuman = "ratemyhuman.cli:main"
+
+[build-system]
+requires = ["hatchling>=1,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ratemyhuman"]
+
+[tool.uv]
+prerelease = "allow"
+index-strategy = "unsafe-best-match"
+# Overriding facenet-pytorch 2.6.0's strict pins (unmaintained; MTCNN works fine with newer deps)
+override-dependencies = [
+    "numpy>=2.1",
+    "pillow>=12.1.1",
+    "torch==2.12.0.dev20260324+cu128",
+    "torchvision==0.26.0.dev20260324+cu128",
+]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/nightly/cu128"
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }

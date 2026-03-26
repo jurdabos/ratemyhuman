@@ -1,0 +1,32 @@
+---
+title: Process Flow — UML Activity Diagram
+---
+flowchart LR
+    subgraph Classification["Classification Process"]
+        direction TB
+        A([Image Input]) --> B[Face Detection via MTCNN]
+        B --> C{Face found?}
+        C -->|No| D[Return error: no face detected]
+        C -->|Yes| E[Crop and align face region]
+        E --> F["Resize to model input size (224×224)"]
+        F --> G[Normalize pixel values]
+        G --> H[Forward pass through pretrained CNN]
+        H --> I[Obtain 7-class emotion probabilities]
+        I --> J[Aggregate to 3-class valence scores]
+        J --> K[Select highest valence class]
+        K --> L([Return: valence label + confidence + scores])
+    end
+
+    Classification ~~~ Validation
+
+    subgraph Validation
+        direction TB
+        M([Load FER2013 test set]) --> N[Map 7-class labels → 3-class valence ground truth]
+        N --> O[Run batch inference on all test images]
+        O --> P[Compare predictions vs. ground truth]
+        P --> Q[Compute confusion matrix]
+        Q --> R[Calculate precision, recall, F1 per class]
+        R --> S[Calculate macro and weighted averages]
+        S --> T[Generate classification report + plots]
+        T --> U([Validation report])
+    end
