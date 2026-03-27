@@ -17,7 +17,7 @@ kaggle datasets download pankaj4321/fer-2013-facial-expression-dataset -p C:\aci
 ```
 
 The dataset contains ~35,887 grayscale 48x48 images split into train/, val/, test/
-with 7 emotion subdirectories each: Angry, Disgust, Fear, Happy, Neutral, Sad, Surprise.
+with 7 emotion subdirectories each: angry, disgust, fear, happy, neutral, sad, surprise.
 
 
 2  Exploration
@@ -72,7 +72,7 @@ uv add transformers
 
 The pretrained ViT emotion model (trpakov/vit-face-expression) is a Vision Transformer
 fine-tuned on FER2013 for 7-class emotion recognition (85.8M params, ~71% test accuracy).
-It outputs softmax probabilities for: Angry, Disgust, Fear, Happy, Neutral, Sad, Surprise.
+It outputs softmax probabilities for: angry, disgust, fear, happy, neutral, sad, surprise.
 
 4.1  Initialise the detector:
 
@@ -91,22 +91,22 @@ INFO: Loaded emotion model: trpakov/vit-face-expression (85.8M params)
 
 ```python
 import glob
-img_path = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\Happy\*.png")[0]
+img_path = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\happy\*.png")[0]
 result = detector.classify(img_path)
 print(result)
 print(f"Emotion breakdown: { {k: round(v, 4) for k, v in result.emotion_scores.items()} }")
 print(f"Valence breakdown: { {k: round(v, 4) for k, v in result.valence_scores.items()} }")
 ```
 ```
-Valence: Positive (99.5%) | Top emotion: Happy (99.3%)
-Emotion breakdown: {'Angry': 0.0002, 'Disgust': 0.0004, 'Fear': 0.0003, 'Happy': 0.9933, 'Neutral': 0.0036, 'Sad': 0.0005, 'Surprise': 0.0017}
+Valence: Positive (99.5%) | Top emotion: happy (99.3%)
+Emotion breakdown: {'angry': 0.0002, 'disgust': 0.0004, 'fear': 0.0003, 'happy': 0.9933, 'neutral': 0.0036, 'sad': 0.0005, 'surprise': 0.0017}
 Valence breakdown: {'Negative': 0.0014, 'Neutral': 0.0036, 'Positive': 0.9951}
 ```
 
 4.3  Spot-check across multiple emotion classes:
 
 ```python
-for emotion in ["Angry", "Sad", "Fear", "Surprise", "Neutral"]:
+for emotion in ["angry", "sad", "fear", "surprise", "neutral"]:
     imgs = glob.glob(rf"C:\acidvuca\ratemyhuman\data\test\{emotion}\*.png")
     if imgs:
         try:
@@ -116,15 +116,15 @@ for emotion in ["Angry", "Sad", "Fear", "Surprise", "Neutral"]:
             print(f"{emotion:>10s} -> {e}")
 ```
 ```
-     Angry -> Valence: Negative (99.6%) | Top emotion: Angry (98.4%)
-       Sad -> Valence: Negative (96.0%) | Top emotion: Sad (64.1%)
-      Fear -> Valence: Negative (99.1%) | Top emotion: Fear (92.1%)
-  Surprise -> No face detected in 32299.png
-   Neutral -> Valence: Negative (99.6%) | Top emotion: Fear (98.4%)
+     angry -> Valence: Negative (99.6%) | Top emotion: angry (98.4%)
+       sad -> Valence: Negative (96.0%) | Top emotion: sad (64.1%)
+      fear -> Valence: Negative (99.1%) | Top emotion: fear (92.1%)
+  surprise -> No face detected in 32299.png
+   neutral -> Valence: Negative (99.6%) | Top emotion: fear (98.4%)
 ```
 
 Note: MTCNN may fail on some 48x48 FER2013 images (designed for higher-res input).
-The Neutral misclassification reflects FER2013's known label noise (~65% inter-annotator agreement).
+The neutral misclassification reflects FER2013's known label noise (~65% inter-annotator agreement).
 These are single-image spot checks showing the pipeline works end-to-end;
 systematic quality is measured in step 6 (validation).
 
@@ -132,9 +132,9 @@ systematic quality is measured in step 6 (validation).
 5  Build valence mapping layer
 ------------------------------
 The valence mapping (concept note s2.3) is the single source of truth in model.py:
-- Negative = Angry + Disgust + Fear + Sad
-- Neutral  = Neutral
-- Positive = Happy + Surprise
+- Negative = angry + disgust + fear + sad
+- Neutral  = neutral
+- Positive = happy + surprise
 
 5.1  Probability aggregation (inference-time):
 
@@ -147,7 +147,7 @@ print(result)
 print(f"Valence scores: {result.valence_scores}")
 ```
 ```
-Valence: Positive (93.0%) | Top emotion: Happy (90.0%)
+Valence: Positive (93.0%) | Top emotion: happy (90.0%)
 Valence scores: {'Negative': 0.04, 'Neutral': 0.03, 'Positive': 0.93}
 ```
 
@@ -164,13 +164,13 @@ for folder in sorted(data_dir.iterdir()):
         print(f"{folder.name:>10s} -> {valence:<10s} ({count:,} images)")
 ```
 ```
-     Angry -> Negative   (491 images)
-   Disgust -> Negative   (55 images)
-      Fear -> Negative   (528 images)
-     Happy -> Positive   (879 images)
-   Neutral -> Neutral    (626 images)
-       Sad -> Negative   (594 images)
-  Surprise -> Positive   (416 images)
+     angry -> Negative   (491 images)
+   disgust -> Negative   (55 images)
+      fear -> Negative   (528 images)
+     happy -> Positive   (879 images)
+   neutral -> Neutral    (626 images)
+       sad -> Negative   (594 images)
+  surprise -> Positive   (416 images)
 ```
 
 The function is case-insensitive and strips whitespace.

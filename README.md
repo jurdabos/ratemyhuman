@@ -21,8 +21,8 @@ The pipeline has three decoupled stages (concept note §4.3):
 uv sync
 
 # Classify a single image
-ratemyhuman classify path/to/face.png
-ratemyhuman classify path/to/face.png --json
+uv run ratemyhuman classify path2realface.png
+uv run ratemyhuman classify path2realface.png --json
 
 # Explore the FER2013 dataset (distribution plots, sample grids)
 ratemyhuman explore

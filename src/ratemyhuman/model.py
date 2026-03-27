@@ -21,18 +21,18 @@ MODEL_ID = "trpakov/vit-face-expression"
 
 # Label order as defined in the model's config.json (id2label)
 EMOTION_LABELS: list[str] = [
-    "Angry", "Disgust", "Fear", "Happy", "Neutral", "Sad", "Surprise",
+    "angry", "disgust", "fear", "happy", "neutral", "sad", "surprise",
 ]
 
 # Valence mapping per concept note §2.3
 VALENCE_MAP: dict[str, str] = {
-    "Angry": "Negative",
-    "Disgust": "Negative",
-    "Fear": "Negative",
-    "Sad": "Negative",
-    "Neutral": "Neutral",
-    "Happy": "Positive",
-    "Surprise": "Positive",
+    "angry": "Negative",
+    "disgust": "Negative",
+    "fear": "Negative",
+    "sad": "Negative",
+    "neutral": "Neutral",
+    "happy": "Positive",
+    "surprise": "Positive",
 }
 
 # Canonical valence class order (used in validation, plots, etc.)
@@ -67,8 +67,8 @@ def map_label_to_valence(emotion_label: str) -> str:
     Raises:
         KeyError: If the emotion label is not recognised.
     """
-    # Normalising to title case to match VALENCE_MAP keys
-    normalised = emotion_label.strip().capitalize()
+    # Normalising to lowercase to match VALENCE_MAP keys
+    normalised = emotion_label.strip().lower()
     if normalised not in VALENCE_MAP:
         raise KeyError(
             f"Unknown emotion label: {emotion_label!r}. "

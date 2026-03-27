@@ -53,13 +53,13 @@ Build a production-ready valence detection pipeline that:
 
 | Emotion    | Valence    | Rationale                                                     |
 |------------|------------|-------------------------------------------------------------- |
-| Angry      | Negative   | Clear negative affect                                         |
-| Disgust    | Negative   | Clear negative affect                                         |
-| Fear       | Negative   | Clear negative affect                                         |
-| Sad        | Negative   | Clear negative affect                                         |
-| Neutral    | Neutral    | No dominant affect                                            |
-| Happy      | Positive   | Clear positive affect                                         |
-| Surprise   | Positive   | In the context of advertisement viewing, surprise is positive |
+| angry      | Negative   | Clear negative affect                                         |
+| disgust    | Negative   | Clear negative affect                                         |
+| fear       | Negative   | Clear negative affect                                         |
+| sad        | Negative   | Clear negative affect                                         |
+| neutral    | Neutral    | No dominant affect                                            |
+| happy      | Positive   | Clear positive affect                                         |
+| surprise   | Positive   | In the context of advertisement viewing, surprise is positive |
 
 ### 2.4 Positives
 

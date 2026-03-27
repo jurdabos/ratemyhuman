@@ -102,7 +102,7 @@ class ValidationRunner:
         """
         Scans the dataset directory and returns (image_path, valence_label) pairs.
 
-        Expects subdirectories named by emotion class (Angry, Happy, etc.).
+        Expects subdirectories named by emotion class (angry, happy, etc.).
         Each emotion folder name is mapped to a valence label via map_label_to_valence().
         """
         samples: list[tuple[Path, str]] = []

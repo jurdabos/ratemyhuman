@@ -66,25 +66,25 @@ class TestValenceMapping:
         assert set(result.valence_scores.keys()) == {"Negative", "Neutral", "Positive"}
 
     def test_negative_aggregation_covers_four_emotions(self):
-        """Verifies Negative = Angry + Disgust + Fear + Sad."""
+        """Verifies Negative = angry + disgust + fear + sad."""
         assert len(_NEGATIVE_IDX) == 4
         negative_emotions = {EMOTION_LABELS[i] for i in _NEGATIVE_IDX}
-        assert negative_emotions == {"Angry", "Disgust", "Fear", "Sad"}
+        assert negative_emotions == {"angry", "disgust", "fear", "sad"}
 
     def test_positive_aggregation_covers_two_emotions(self):
-        """Verifies Positive = Happy + Surprise."""
+        """Verifies Positive = happy + surprise."""
         assert len(_POSITIVE_IDX) == 2
         positive_emotions = {EMOTION_LABELS[i] for i in _POSITIVE_IDX}
-        assert positive_emotions == {"Happy", "Surprise"}
+        assert positive_emotions == {"happy", "surprise"}
 
     def test_neutral_aggregation_covers_one_emotion(self):
-        """Verifies Neutral = Neutral only."""
+        """Verifies neutral = neutral only."""
         assert len(_NEUTRAL_IDX) == 1
-        assert EMOTION_LABELS[_NEUTRAL_IDX[0]] == "Neutral"
+        assert EMOTION_LABELS[_NEUTRAL_IDX[0]] == "neutral"
 
     def test_single_emotion_saturation(self):
         """Verifies correct output when a single emotion has 100% probability."""
-        probs = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])  # 100% Happy
+        probs = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])  # 100% happy
         result = ValenceDetector.map_to_valence(probs)
         assert result.label == "Positive"
         assert result.confidence == pytest.approx(1.0)
@@ -93,7 +93,7 @@ class TestValenceMapping:
 
     def test_tie_negative_vs_positive(self):
         """Verifies deterministic output when Negative and Positive are tied."""
-        # Angry=0.25, Disgust=0.25 → Negative=0.50; Happy=0.25, Surprise=0.25 → Positive=0.50
+        # angry=0.25, disgust=0.25 → Negative=0.50; happy=0.25, surprise=0.25 → Positive=0.50
         probs = np.array([0.25, 0.25, 0.0, 0.25, 0.0, 0.0, 0.25])
         result = ValenceDetector.map_to_valence(probs)
         # With dict-order tie-breaking, Negative comes first in the dict → wins max()
@@ -119,13 +119,13 @@ class TestMapLabelToValence:
     """Tests the ground-truth label mapping function."""
 
     @pytest.mark.parametrize("emotion,expected", [
-        ("Angry", "Negative"),
-        ("Disgust", "Negative"),
-        ("Fear", "Negative"),
-        ("Sad", "Negative"),
-        ("Neutral", "Neutral"),
-        ("Happy", "Positive"),
-        ("Surprise", "Positive"),
+        ("angry", "Negative"),
+        ("disgust", "Negative"),
+        ("fear", "Negative"),
+        ("sad", "Negative"),
+        ("neutral", "Neutral"),
+        ("happy", "Positive"),
+        ("surprise", "Positive"),
     ])
     def test_all_emotions_map_correctly(self, emotion, expected):
         """Verifies each emotion maps to the correct valence per §2.3."""
@@ -135,7 +135,7 @@ class TestMapLabelToValence:
         """Verifies that label mapping accepts case variations."""
         assert map_label_to_valence("angry") == "Negative"
         assert map_label_to_valence("HAPPY") == "Positive"
-        assert map_label_to_valence("neutral") == "Neutral"
+        assert map_label_to_valence("Neutral") == "Neutral"
 
     def test_strips_whitespace(self):
         """Verifies that leading/trailing whitespace is handled."""
@@ -180,13 +180,13 @@ class TestValenceResult:
         result = ValenceResult(
             label="Positive",
             confidence=0.95,
-            emotion_scores={"Happy": 0.90, "Surprise": 0.05, "Angry": 0.01,
-                            "Disgust": 0.01, "Fear": 0.01, "Neutral": 0.01, "Sad": 0.01},
+            emotion_scores={"happy": 0.90, "surprise": 0.05, "angry": 0.01,
+                            "disgust": 0.01, "fear": 0.01, "neutral": 0.01, "sad": 0.01},
             valence_scores={"Positive": 0.95, "Negative": 0.04, "Neutral": 0.01},
         )
         text = str(result)
         assert "Positive" in text
-        assert "Happy" in text
+        assert "happy" in text
         assert "95" in text
 
     def test_valence_map_completeness(self):
@@ -208,17 +208,17 @@ class TestDetectorIntegration:
         return ValenceDetector()
 
     def test_classify_happy_image(self, detector):
-        """Verifies end-to-end classification on a Happy test image."""
-        images = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\Happy\*.png")
-        assert len(images) > 0, "No Happy test images found"
+        """Verifies end-to-end classification on a happy test image."""
+        images = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\happy\*.png")
+        assert len(images) > 0, "No happy test images found"
         result = detector.classify(images[0])
         assert result.label == "Positive"
         assert result.confidence > 0.5
 
     def test_classify_angry_image(self, detector):
-        """Verifies end-to-end classification on an Angry test image."""
-        images = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\Angry\*.png")
-        assert len(images) > 0, "No Angry test images found"
+        """Verifies end-to-end classification on an angry test image."""
+        images = glob.glob(r"C:\acidvuca\ratemyhuman\data\test\angry\*.png")
+        assert len(images) > 0, "No angry test images found"
         result = detector.classify(images[0])
         assert result.label == "Negative"
 
