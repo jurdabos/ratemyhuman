@@ -7,6 +7,8 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "click>=8.1",
     "facenet-pytorch>=2.6.0",
+    "gradio>=6.10.0",
+    "gradio-client>=2.4.0",
     "matplotlib>=3.10.8",
     "numpy>=2.1",
     "pillow>=12.1.1",
@@ -55,4 +57,5 @@ markers = ["slow: marks tests that require GPU and model weights (deselect with 
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
 ]

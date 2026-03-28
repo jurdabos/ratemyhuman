@@ -25,22 +25,26 @@ uv run ratemyhuman classify path2realface.png
 uv run ratemyhuman classify path2realface.png --json
 
 # Explore the FER2013 dataset (distribution plots, sample grids)
-ratemyhuman explore
+uv run ratemyhuman explore
 
 # Validate on the FER2013 test set (metrics + confusion matrix)
-ratemyhuman validate
+uv run ratemyhuman validate
+
+# Start web UI
+uv run ratemyhuman demo --port 8888
 ```
 
 ## CLI reference
 
 | Command | Description |
 |---|---|
-| `ratemyhuman classify IMAGE` | Classify one image (supports `--json`, `--device`) |
-| `ratemyhuman explore` | Run dataset exploration (supports `--data-dir`, `--output-dir`) |
-| `ratemyhuman validate` | Run validation on labelled data (supports `--data-dir`, `--split`) |
-| `ratemyhuman push` | DVC + git commit + push workflow (supports `-m`, `--dry-run`) |
+| `uv run ratemyhuman classify IMAGE` | Classify one image (supports `--json`, `--device`) |
+| `uv run ratemyhuman explore` | Run dataset exploration (supports `--data-dir`, `--output-dir`) |
+| `uv run ratemyhuman validate` | Run validation on labelled data (supports `--data-dir`, `--split`) |
+| `uv run ratemyhuman demo` | Launch Gradio web UI (supports `--share`, `--port`) |
+| `uv run ratemyhuman push` | DVC + git commit + push workflow (supports `-m`, `--dry-run`) |
 
-Global: `ratemyhuman -v <command>` enables debug logging.
+Global: `uv run ratemyhuman -v <command>` enables debug logging.
 
 ## Validation results (FER2013 test set)
 
@@ -62,13 +66,17 @@ src/ratemyhuman/
   model.py       # ValenceDetector, ValenceResult, valence mapping
   validate.py    # ValidationRunner, ValidationReport, metrics + plots
   explore.py     # Dataset exploration: distributions, sample grids, integrity
-  cli.py         # Click CLI: classify, explore, validate, push
+  app.py         # Gradio web UI: predict, build_app, launch
+  cli.py         # Click CLI: classify, explore, validate, demo, push
 tests/
-  test_model.py      # 29 unit + 3 integration tests
-  test_validate.py   # 10 unit tests
+  test_model.py      # Valence mapping + mocked pipeline tests
+  test_validate.py   # Metrics, runner, plot, convenience function tests
+  test_explore.py    # Count, integrity, plotting, run_exploration tests
+  test_cli.py        # CLI helper functions + Click command tests
+  test_app.py        # Gradio predict + build_app tests
 docs/
   concept_note.md    # Full project concept note
-  notebook_steps.txt # Jupyter notebook runbook
+  presentation.ipynb # Jupyter notebook presentation
   *.png              # Generated plots
 data/                # FER2013 dataset (DVC-tracked, not in git)
 ```
@@ -82,9 +90,12 @@ data/                # FER2013 dataset (DVC-tracked, not in git)
 ## Testing
 
 ```bash
-# Unit tests (no GPU required)
+# Unit tests (no GPU required) — 109 tests, ~90% coverage
 uv run pytest tests/ -m "not slow"
 
-# Integration tests (requires GPU + model weights)
+# Integration tests (requires GPU + model weights) — 3 tests
 uv run pytest tests/ -m "slow"
+
+# With coverage report
+uv run pytest tests/ -m "not slow" --cov=ratemyhuman --cov-report=term-missing
 ```

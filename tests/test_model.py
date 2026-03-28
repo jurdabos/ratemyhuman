@@ -1,8 +1,11 @@
 """Tests for the ValenceDetector, ValenceResult, and valence mapping layer."""
 import glob
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import torch
+from PIL import Image
 
 from ratemyhuman.model import (
     EMOTION_LABELS,
@@ -226,3 +229,101 @@ class TestDetectorIntegration:
         """Verifies FileNotFoundError for missing image paths."""
         with pytest.raises(FileNotFoundError):
             detector.classify("nonexistent_image.png")
+
+
+# ---------------------------------------------------------------------------
+# Pipeline tests — mocked external deps (no GPU / model weights required)
+# ---------------------------------------------------------------------------
+class TestDetectorPipeline:
+    """Tests the ValenceDetector pipeline with mocked MTCNN/ViT."""
+
+    @pytest.fixture
+    def detector(self):
+        """Creates a ValenceDetector with mocked external dependencies."""
+        with patch("ratemyhuman.model.MTCNN"), \
+             patch("ratemyhuman.model.ViTImageProcessor"), \
+             patch("ratemyhuman.model.ViTForImageClassification"):
+            d = ValenceDetector(device="cpu")
+        return d
+
+    def test_init_sets_device(self, detector):
+        """Verifies that the detector is initialised on the specified device."""
+        assert str(detector.device) == "cpu"
+
+    def test_detect_face_found(self, detector):
+        """Verifies face detection returns a numpy array when a face is found."""
+        face_tensor = torch.ones(3, 224, 224, dtype=torch.float32) * 128
+        detector.face_detector = MagicMock(return_value=face_tensor)
+        img = Image.new("RGB", (224, 224))
+        result = detector.detect_face(img)
+        assert result is not None
+        assert result.shape == (224, 224, 3)
+
+    def test_detect_face_none(self, detector):
+        """Verifies None is returned when no face is detected."""
+        detector.face_detector = MagicMock(return_value=None)
+        img = Image.new("RGB", (224, 224))
+        assert detector.detect_face(img) is None
+
+    def test_predict_emotion(self, detector):
+        """Verifies emotion prediction returns 7 probabilities summing to 1."""
+        mock_inputs = MagicMock()
+        mock_inputs.to.return_value = mock_inputs
+        detector.processor = MagicMock(return_value=mock_inputs)
+        logits = torch.randn(1, 7)
+        mock_output = MagicMock()
+        mock_output.logits = logits
+        detector.emotion_model = MagicMock(return_value=mock_output)
+        face = np.zeros((224, 224, 3), dtype=np.uint8)
+        probs = detector.predict_emotion(face)
+        assert probs.shape == (7,)
+        assert abs(sum(probs) - 1.0) < 1e-5
+
+    def test_classify_file(self, detector, tmp_path):
+        """Verifies the full classify pipeline with mocked internals."""
+        img_path = tmp_path / "face.png"
+        Image.new("RGB", (48, 48)).save(img_path)
+        detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
+        detector.predict_emotion = MagicMock(
+            return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03])
+        )
+        result = detector.classify(img_path)
+        assert result.label == "Positive"
+        assert result.confidence > 0.9
+
+    def test_classify_no_face(self, detector, tmp_path):
+        """Verifies ValueError when no face is detected."""
+        img_path = tmp_path / "noface.png"
+        Image.new("RGB", (48, 48)).save(img_path)
+        detector.detect_face = MagicMock(return_value=None)
+        with pytest.raises(ValueError, match="No face detected"):
+            detector.classify(img_path)
+
+    def test_classify_file_not_found(self, detector):
+        """Verifies FileNotFoundError for missing files."""
+        with pytest.raises(FileNotFoundError):
+            detector.classify("nonexistent.png")
+
+    def test_classify_array_pil(self, detector):
+        """Verifies classify_array with a PIL image."""
+        detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
+        detector.predict_emotion = MagicMock(
+            return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03])
+        )
+        result = detector.classify_array(Image.new("RGB", (224, 224)))
+        assert result.label == "Positive"
+
+    def test_classify_array_numpy(self, detector):
+        """Verifies classify_array with a numpy array."""
+        detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
+        detector.predict_emotion = MagicMock(
+            return_value=np.array([0.85, 0.03, 0.03, 0.02, 0.02, 0.03, 0.02])
+        )
+        result = detector.classify_array(np.zeros((48, 48, 3), dtype=np.uint8))
+        assert result.label == "Negative"
+
+    def test_classify_array_no_face(self, detector):
+        """Verifies ValueError from classify_array when no face detected."""
+        detector.detect_face = MagicMock(return_value=None)
+        with pytest.raises(ValueError, match="No face detected"):
+            detector.classify_array(Image.new("RGB", (48, 48)))

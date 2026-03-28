@@ -1,3 +1,5 @@
+NOTE: This text runbook has been converted to docs/presentation.ipynb.
+
 Facial Valence Detection — Notebook Runbook
 =============================================
 Each section below maps to one or more Jupyter cells.
@@ -45,7 +47,7 @@ Outputs saved to docs/: class_distribution.png, valence_distribution.png, sample
 nvidia-smi --query-gpu=name,compute_cap,driver_version --format=csv,noheader
 ```
 ```
-NVIDIA GeForce RTX 5070 Ti Laptop GPU, 12.0, 572.83
+NVIDIA GeForce RTX 5070 Ti Laptop GPU, 12.0, 581.29
 ```
 
 ```python
@@ -254,7 +256,7 @@ print(f"Misclassified examples: {len(report.misclassified)}")
 uv run pytest tests/ -v -m "not slow"
 ```
 ```
-39 passed in 4.85s
+46 passed in 5.70s
 ```
 
 ```shell

@@ -4,6 +4,8 @@ Command-line interface for ratemyhuman.
 Provides subcommands for classification, exploration, validation,
 and the DVC + git push workflow.
 """
+import warnings
+warnings.filterwarnings("ignore", message="torch._dynamo.allow_in_graph is deprecated")
 import logging
 import shutil
 import subprocess
@@ -220,6 +222,23 @@ def validate_cmd(data_dir: str | None, output_dir: str | None, split: str) -> No
         split=split,
     )
     click.echo(click.style("\n✓ Validation complete.", fg="green"))
+
+
+# -------------------------------------------------------------------
+# demo (Gradio web UI)
+# -------------------------------------------------------------------
+@cli.command("demo")
+@click.option("--share", is_flag=True, help="Create a public Gradio link")
+@click.option("--port", default=7860, type=int, show_default=True, help="Server port")
+def demo_cmd(share: bool, port: int) -> None:
+    """
+    Launches the Gradio web UI for interactive valence detection.
+
+    Upload a face image (or use your webcam) and get instant
+    valence + emotion predictions.
+    """
+    from ratemyhuman.app import launch
+    launch(share=share, server_port=port)
 
 
 # -------------------------------------------------------------------
