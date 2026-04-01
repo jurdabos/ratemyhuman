@@ -1,5 +1,7 @@
 # ratemyhuman
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-16697A.svg)](LICENSE)
+
 Facial valence detection from human face images.  
 Classifies facial expressions as **Negative**, **Neutral**, or **Positive** using a pretrained Vision Transformer and MTCNN face detection.
 
@@ -80,6 +82,18 @@ docs/
   *.png              # Generated plots
 data/                # FER2013 dataset (DVC-tracked, not in git)
 ```
+
+## Data setup
+
+The FER2013 dataset is managed with [DVC](https://dvc.org/) and stored on S3.
+
+```bash
+# Pull data from the configured DVC remote (requires AWS credentials)
+dvc pull
+```
+
+Alternatively, download [FER-2013 from Kaggle](https://www.kaggle.com/datasets/pankaj4321/fer-2013-facial-expression-dataset) and extract into `data/` with subdirectories `train/`, `val/`, `test/` containing one folder per emotion class.  
+See `.env.example` for the Kaggle credential placeholders.
 
 ## GPU requirements
 

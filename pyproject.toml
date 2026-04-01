@@ -3,6 +3,8 @@ name = "ratemyhuman"
 version = "0.1.0"
 description = "Facial valence detection from human face images"
 readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Torda Balázs"}]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "click>=8.1",

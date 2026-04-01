@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RateMyHuman — Development Phase (4:3)</title>
+<style>
+  /* ── Visual guidelines from palettes.json ── */
+  :root {
+    --caribbean-current: #16697A;
+    --mindaro:           #DBF4A7;
+    --chestnut:          #A24936;
+    --maya-blue:         #7EBCE6;
+    --pale-dogwood:      #E6BEAE;
+    --white:             #FFFFFF;
+    --black:             #000000;
+    --light-bg:          #F4F8FA;
+    --code-bg:           #0D3C45;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Geneva, Verdana, sans-serif;
+    background: var(--light-bg);
+    color: var(--black);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* ── Fixed 4:3 slide ── */
+  .slide {
+    width: 960px;
+    height: 720px;
+    margin: 40px auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    padding: 32px 40px 48px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Accent bar */
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--caribbean-current), var(--maya-blue), var(--mindaro));
+  }
+
+  /* ── Title slide ── */
+  .slide.title-slide {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, var(--caribbean-current) 0%, #104A56 100%);
+    color: var(--white);
+  }
+  .slide.title-slide::before { display: none; }
+  .slide.title-slide h1 {
+    font-size: 2.4em;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .slide.title-slide .subtitle {
+    font-size: 1.15em;
+    color: var(--mindaro);
+    margin-bottom: 20px;
+  }
+  .slide.title-slide .meta {
+    font-size: 0.9em;
+    color: var(--maya-blue);
+    line-height: 1.7;
+  }
+
+  /* ── Headings ── */
+  h2 {
+    color: var(--caribbean-current);
+    font-size: 1.5em;
+    border-bottom: 3px solid var(--maya-blue);
+    padding-bottom: 6px;
+    margin-bottom: 20px;
+  }
+  h3 {
+    color: var(--caribbean-current);
+    font-size: 1.05em;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Text ── */
+  p, li { margin-bottom: 6px; }
+  ul { padding-left: 18px; }
+  li::marker { color: var(--caribbean-current); }
+  strong { color: var(--caribbean-current); }
+  em { color: var(--chestnut); font-style: normal; font-weight: 600; }
+  a {
+    color: var(--caribbean-current);
+    text-decoration: underline;
+    text-decoration-color: var(--maya-blue);
+    text-underline-offset: 2px;
+  }
+  a:hover { color: var(--chestnut); }
+
+  /* ── Callout ── */
+  .callout {
+    background: #EEF9FC;
+    border-left: 4px solid var(--caribbean-current);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 0.9em;
+  }
+  .callout.warn  { background: #FFF3EC; border-left-color: var(--chestnut); }
+  .callout.success { background: #F4FCE3; border-left-color: #5A8A00; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.85em;
+  }
+  th {
+    background: var(--caribbean-current);
+    color: var(--white);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #dde6ea;
+  }
+  tr:nth-child(even) td { background: #F4F8FA; }
+
+  /* ── Code ── */
+  code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    background: #EEF9FC;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.86em;
+    color: var(--caribbean-current);
+  }
+  pre {
+    background: var(--code-bg);
+    color: #CBEEF6;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.8em;
+    line-height: 1.5;
+    margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.82em;
+    font-weight: 600;
+    margin: 1px 3px;
+  }
+  .badge.neg { background: var(--chestnut); color: var(--white); }
+  .badge.neu { background: var(--maya-blue); color: var(--black); }
+  .badge.pos { background: var(--mindaro);   color: var(--black); }
+
+  /* ── Two-column layout ── */
+  .cols { display: flex; gap: 24px; }
+  .cols > div { flex: 1; }
+
+  /* ── Metric grid ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .metric-card {
+    background: #EEF9FC;
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    border: 2px solid transparent;
+  }
+  .metric-card.highlight { border-color: var(--caribbean-current); }
+  .metric-card .value {
+    font-size: 1.7em;
+    font-weight: 700;
+    color: var(--caribbean-current);
+    line-height: 1.2;
+  }
+  .metric-card .label {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* ── Pipeline ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 18px 0;
+  }
+  .pipeline .stage {
+    background: var(--caribbean-current);
+    color: var(--white);
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.88em;
+    font-weight: 600;
+    min-width: 155px;
+  }
+  .pipeline .stage.s2 { background: var(--maya-blue); color: var(--black); }
+  .pipeline .stage.s3 { background: var(--mindaro);   color: var(--black); }
+  .pipeline .arrow {
+    font-size: 1.3em;
+    color: var(--caribbean-current);
+    padding: 0 6px;
+  }
+
+  /* ── Stack grid ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .stack-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: #F4F8FA;
+    border-radius: 6px;
+    font-size: 0.86em;
+  }
+  .stack-item .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Mapping visual ── */
+  .mapping-visual {
+    display: flex;
+    gap: 12px;
+    margin: 14px 0;
+  }
+  .mapping-col {
+    flex: 1;
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .mapping-col h4 { margin-bottom: 4px; font-size: 0.88em; }
+  .mapping-col ul  { list-style: none; padding: 0; }
+  .mapping-col li  { padding: 2px 0; font-size: 0.84em; }
+
+  /* ── Slide number ── */
+  .slide-num {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    font-size: 0.7em;
+    color: #aaa;
+  }
+
+  /* ── Print / PDF ── */
+  @page {
+    size: 960px 720px;
+    margin: 0;
+  }
+  @media print {
+    html, body {
+      width: 960px;
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+    .slide {
+      width: 960px;
+      height: 720px;
+      margin: 0;
+      padding: 32px 40px 48px;
+      box-shadow: none;
+      border-radius: 0;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+    .slide:last-child { page-break-after: auto; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title                                                -->
+<!-- ============================================================ -->
+<div class="slide title-slide">
+  <h1>Development of valence recognition for human face image data</h1>
+  <div class="subtitle">https://github.com/jurdabos/ratemyhuman</div>
+  <div class="meta">
+    Torda Balázs &middot; 92128244<br>
+    course: DLBDSEAIS02 &middot; tutor: Martin, Simon, Prof. Dr.<br>
+    Finalized for submission on 1 Apr 2026
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: Problem & Goal                                       -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>1 &nbsp; Problem &amp; Goal</h2>
+
+  <p>The marketing department needs a tool that detects the <strong>emotional state</strong> of
+  viewers watching advertisements — from a single face image.</p>
+
+  <div class="callout">
+    Rather than classifying granular emotions, we adopt a <strong>threefold valence model</strong>
+    — <span class="badge neg">Negative</span> <span class="badge neu">Neutral</span>
+    <span class="badge pos">Positive</span> — providing a cleaner, more actionable signal.
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>System output per image</h3>
+      <ul>
+        <li><strong>Valence label</strong> (negative / neutral / positive)</li>
+        <li><strong>Confidence score</strong> for the prediction</li>
+        <li>Full <strong>7-class emotion distribution</strong> for transparency</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Key design decisions</h3>
+      <ul>
+        <li><strong>Pretrained model</strong> — leverage state-of-the-art weights</li>
+        <li><strong>Decoupled pipeline</strong> — detection, inference and mapping as independent stages</li>
+        <li><strong>Built-in validation</strong> — metrics as a core component</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="slide-num">2 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: Technology Stack                                     -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>2 &nbsp; Frameworks &amp; Tools</h2>
+
+  <div class="stack-grid">
+    <div class="stack-item">
+      <span class="dot" style="background:var(--caribbean-current)"></span>
+      <span><strong>Python 3.12</strong> — <a href="https://www.python.org/downloads/release/python-31211/" target="_blank">python.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--chestnut)"></span>
+      <span><strong>PyTorch nightly + CUDA 12.8</strong> — <a href="https://pytorch.org/" target="_blank">pytorch.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--maya-blue)"></span>
+      <span><strong>HuggingFace Transformers</strong> — <a href="https://huggingface.co/docs/transformers" target="_blank">huggingface.co</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--mindaro)"></span>
+      <span><strong>facenet-pytorch (MTCNN)</strong> — <a href="https://github.com/timesler/facenet-pytorch" target="_blank">github.com</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--pale-dogwood)"></span>
+      <span><strong>Gradio 6.x</strong> — <a href="https://www.gradio.app/" target="_blank">gradio.app</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--caribbean-current)"></span>
+      <span><strong>scikit-learn</strong> — <a href="https://scikit-learn.org/" target="_blank">scikit-learn.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--chestnut)"></span>
+      <span><strong>matplotlib + seaborn</strong> — <a href="https://matplotlib.org/" target="_blank">matplotlib.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--maya-blue)"></span>
+      <span><strong>uv</strong> (package mgmt) — <a href="https://docs.astral.sh/uv/" target="_blank">docs.astral.sh/uv</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--mindaro)"></span>
+      <span><strong>DVC</strong> (data versioning) — <a href="https://dvc.org/" target="_blank">dvc.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--pale-dogwood)"></span>
+      <span><strong>pytest</strong> (testing) — <a href="https://docs.pytest.org/" target="_blank">docs.pytest.org</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--caribbean-current)"></span>
+      <span><strong>Click</strong> (CLI framework) — <a href="https://click.palletsprojects.com/" target="_blank">click.palletsprojects.com</a></span>
+    </div>
+    <div class="stack-item">
+      <span class="dot" style="background:var(--chestnut)"></span>
+      <span><strong>Git + GitHub + pre-commit</strong> — <a href="https://github.com/" target="_blank">github.com</a></span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Why PyTorch nightly?</strong> The RTX 5070 Ti (Blackwell, sm_120) requires nightly builds —
+    TensorFlow does not support this GPU. <code>uv</code> manages the nightly index via <code>pyproject.toml</code>.
+  </div>
+
+  <span class="slide-num">3 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: System Architecture                                  -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>3 &nbsp; System Architecture</h2>
+
+  <p>Five major classes implement the concept note UML:</p>
+
+  <table>
+    <tr><th>Class</th><th>Module</th><th>Responsibility</th></tr>
+    <tr>
+      <td><code>ValenceDetector</code></td>
+      <td>model.py</td>
+      <td>Orchestrates face detection → emotion inference → valence mapping</td>
+    </tr>
+    <tr>
+      <td><code>ValenceResult</code></td>
+      <td>model.py</td>
+      <td>Dataclass: label, confidence, emotion &amp; valence scores</td>
+    </tr>
+    <tr>
+      <td><code>ValidationRunner</code></td>
+      <td>validate.py</td>
+      <td>Batch inference on labelled data, computes all metrics</td>
+    </tr>
+    <tr>
+      <td><code>ValidationReport</code></td>
+      <td>validate.py</td>
+      <td>Dataclass: accuracy, F1, MCC, confusion matrix, per-class metrics</td>
+    </tr>
+    <tr>
+      <td><code>GradioInterface</code></td>
+      <td>app.py</td>
+      <td>Web UI: upload → prediction → result display</td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    All valence constants (<code>VALENCE_MAP</code>, <code>VALENCE_ORDER</code>, <code>VALENCE_COLOURS</code>,
+    <code>EMOTION_PALETTE</code>) live in <code>model.py</code><br>— single source of truth, zero duplication.
+  </div>
+
+  <span class="slide-num">4 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: Pipeline Process Flow                                -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>4 &nbsp; Classification Pipeline</h2>
+
+  <p>Three-stage pipeline as proposed in the concept note:</p>
+
+  <div class="pipeline">
+    <div class="stage">1&ensp;Face Detection<br><small>MTCNN</small></div>
+    <div class="arrow">→</div>
+    <div class="stage s2">2&ensp;Emotion Inference<br><small>ViT (85.8M params)</small></div>
+    <div class="arrow">→</div>
+    <div class="stage s3">3&ensp;Valence Mapping<br><small>7-class → 3-class</small></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Stage 1 — Face Detection</h3>
+      <ul>
+        <li><strong>MTCNN</strong> from <code>facenet-pytorch</code></li>
+        <li>Crops &amp; aligns largest face to 224×224</li>
+        <li>Returns <code>None</code> when no face found</li>
+      </ul>
+
+      <h3>Stage 2 — Emotion Inference</h3>
+      <ul>
+        <li>ViT: <a href="https://huggingface.co/trpakov/vit-face-expression" target="_blank">trpakov/vit-face-expression</a></li>
+        <li>7-class softmax, GPU-accelerated (CUDA 12.8)</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Stage 3 — Valence Mapping</h3>
+      <ul style="font-size: 0.92em; white-space: nowrap;">
+        <li>P(<span class="badge neg">Neg</span>) = P(angry) + P(disgust) + P(fear) + P(sad)</li>
+        <li>P(<span class="badge neu">Neu</span>) = P(neutral)</li>
+        <li>P(<span class="badge pos">Pos</span>) = P(happy) + P(surprise)</li>
+      </ul>
+
+      <h3>Design rationale</h3>
+      <ul>
+        <li>Each stage independently testable and replaceable</li>
+        <li>Mapping is transparent and auditable</li>
+        <li>Surprise → Positive: fixed to advertising context</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="slide-num">5 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Dataset — FER2013                                    -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>5a &nbsp; Dataset — FER2013</h2>
+
+  <div class="cols">
+    <div>
+      <h3>Overview</h3>
+      <ul>
+        <li><strong>Source:</strong> <a href="https://www.kaggle.com/datasets/pankaj4321/fer-2013-facial-expression-dataset" target="_blank">Kaggle — FER-2013</a></li>
+        <li><strong>Size:</strong> ~35,887 grayscale 48×48 images</li>
+        <li><strong>Labels:</strong> 7 emotion classes</li>
+        <li><strong>Splits:</strong> train (~28k) / val (~3.5k) / test (~3.5k)</li>
+        <li><strong>Known issue:</strong> ~65% inter-annotator agreement</li>
+        <li>Versioned with <strong>DVC</strong>, stored on AWS S3</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Why all three splits?</h3>
+      <p>The pretrained ViT was fine-tuned on the train split by its original authors —
+      we evaluate on <em>test only</em> as an independent benchmark.</p>
+      <ul>
+        <li><strong>Bias context</strong> — training distribution reveals inherited biases (e.g. "happy" dominates, "disgust" ~1.5%)</li>
+        <li><strong>Evaluation integrity</strong> — proves test images were unseen during training</li>
+        <li><strong>Structural imbalance</strong> — class imbalance is intrinsic to FER2013, not a sampling artefact</li>
+      </ul>
+    </div>
+  </div>
+
+  <div>
+    <h3>Emotion class distribution</h3>
+    <img src="class_distribution.png" alt="FER-2013 emotion class distribution"
+         style="max-width:100%; max-height:210px; border-radius:6px; margin-top:2px;">
+  </div>
+
+  <span class="slide-num">6 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Valence Distribution                                 -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>5b &nbsp; Valence Distribution</h2>
+
+  <p>The 7 emotion classes are aggregated into 3 valence classes per the concept note mapping:</p>
+
+  <div class="mapping-visual">
+    <div class="mapping-col" style="background: #F2E0DB;">
+      <h4 style="color:var(--chestnut);">Negative</h4>
+      <ul>
+        <li>angry</li>
+        <li>disgust</li>
+        <li>fear</li>
+        <li>sad</li>
+      </ul>
+    </div>
+    <div class="mapping-col" style="background: #E3F1F8;">
+      <h4 style="color:var(--caribbean-current);">Neutral</h4>
+      <ul>
+        <li>neutral</li>
+      </ul>
+    </div>
+    <div class="mapping-col" style="background: #F0F9E0;">
+      <h4 style="color:#5A8A00;">Positive</h4>
+      <ul>
+        <li>happy</li>
+        <li>surprise</li>
+      </ul>
+    </div>
+  </div>
+
+  <div>
+    <img src="valence_distribution.png" alt="FER-2013 valence distribution (3-class)"
+         style="max-width:100%; max-height:210px; border-radius:6px; margin-top:2px;">
+    <div class="callout" style="margin-top:8px;">
+    <strong>Negative</strong> dominates all splits (~47%), then <strong>Positive</strong> (~36%) and
+    <strong>Neutral</strong> (~17%)<br>— hence we report both macro and weighted F1.
+    </div>
+  </div>
+
+  <span class="slide-num">7 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: Model Integration                                    -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>6 &nbsp; Pretrained Model Integration</h2>
+
+  <div class="cols">
+    <div>
+      <h3>Model card</h3>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Model</td><td><a href="https://huggingface.co/trpakov/vit-face-expression" target="_blank">trpakov/vit-face-expression</a></td></tr>
+        <tr><td>Architecture</td><td>Vision Transformer (ViT)</td></tr>
+        <tr><td>Parameters</td><td>85.8 M</td></tr>
+        <tr><td>Input</td><td>224 × 224 RGB</td></tr>
+        <tr><td>Output</td><td>7-class softmax</td></tr>
+        <tr><td>Fine-tuned on</td><td>FER2013</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Integration approach</h3>
+      <ul>
+        <li>Loaded via <code>ViTForImageClassification.from_pretrained()</code></li>
+        <li>Preprocessing via <code>ViTImageProcessor.from_pretrained()</code></li>
+        <li>Lazy singleton in Gradio<br>— model loaded on first request</li>
+        <li>All inference in <code>torch.no_grad()</code> context</li>
+      </ul>
+
+      <h3>Face detection</h3>
+      <ul>
+        <li><strong>MTCNN</strong> — selects largest face, 20 px margin, 224×224 resize</li>
+        <li>PyTorch-native — same GPU device<br>as the ViT model</li>
+      </ul>
+    </div>
+  </div>
+
+  <pre><code># Minimal usage (model.py)
+detector = ValenceDetector(device="cuda")
+result   = detector.classify("face.png")
+print(result)  # → Valence: Positive (93.2%) | Top emotion: happy (90.1%)</code></pre>
+
+  <span class="slide-num">8 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: Validation Results                                   -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>7 &nbsp; Validation Results</h2>
+
+  <p>Evaluated on the FER2013 <strong>test split</strong> — 2,999 of 3,589 images
+  <br>(590 skipped: MTCNN could not detect a face in the 48×48 images).</p>
+
+  <div class="metric-grid">
+    <div class="metric-card highlight">
+      <div class="value">82.86%</div>
+      <div class="label">Accuracy</div>
+    </div>
+    <div class="metric-card">
+      <div class="value">0.803</div>
+      <div class="label">F1 (macro)</div>
+    </div>
+    <div class="metric-card">
+      <div class="value">0.828</div>
+      <div class="label">F1 (weighted)</div>
+    </div>
+    <div class="metric-card">
+      <div class="value">0.728</div>
+      <div class="label">MCC</div>
+    </div>
+    <div class="metric-card">
+      <div class="value" style="color:var(--chestnut);">33.3%</div>
+      <div class="label">Random baseline</div>
+    </div>
+    <div class="metric-card">
+      <div class="value" style="color:var(--chestnut);">44.2%</div>
+      <div class="label">Majority baseline</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Per-class breakdown</h3>
+      <table>
+        <tr><th>Valence</th><th>Prec.</th><th>Recall</th><th>F1</th></tr>
+        <tr><td><span class="badge neg">Negative</span></td><td style="text-align:right">0.87</td><td style="text-align:right">0.89</td><td style="text-align:right">0.88</td></tr>
+        <tr><td><span class="badge neu">Neutral</span></td><td style="text-align:right">0.69</td><td style="text-align:right">0.68</td><td style="text-align:right">0.68</td></tr>
+        <tr><td><span class="badge pos">Positive</span></td><td style="text-align:right">0.88</td><td style="text-align:right">0.92</td><td style="text-align:right">0.90</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Key observations</h3>
+      <ul>
+        <li><span class="badge pos">Positive</span> performs best (F1 = 0.90)</li>
+        <li><span class="badge neu">Neutral</span> hardest to classify (F1 = 0.68)</li>
+        <li>MCC 0.728 confirms strong multi-class discrimination</li>
+        <li>Accuracy far exceeds both baselines</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="slide-num">9 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Code Quality & Testing                              -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>8 &nbsp; Code Quality &amp; Testing</h2>
+
+  <div class="cols">
+    <div>
+      <h3>Code organisation</h3>
+      <pre><code>src/ratemyhuman/
+  model.py      # ValenceDetector, ValenceResult
+  validate.py   # ValidationRunner, ValidationReport
+  explore.py    # Dataset exploration, plots
+  app.py        # Gradio web UI
+  cli.py        # Click CLI (5 subcommands)
+tests/
+  test_model.py, test_validate.py,
+  test_explore.py, test_cli.py, test_app.py</code></pre>
+
+      <h3>CLI interface</h3>
+      <pre><code>uv run ratemyhuman classify img.png
+uv run ratemyhuman explore
+uv run ratemyhuman validate
+uv run ratemyhuman demo --port 8888
+uv run ratemyhuman push -m "message"</code></pre>
+    </div>
+    <div>
+      <h3>Testing</h3>
+      <ul>
+        <li><strong>109 unit tests</strong> (no GPU required)</li>
+        <li><strong>3 integration tests</strong> (GPU + model weights)</li>
+        <li><strong>~90% code coverage</strong></li>
+        <li>Markers: <code>-m "not slow"</code> vs <code>-m "slow"</code></li>
+      </ul>
+
+      <h3>Code documentation</h3>
+      <ul>
+        <li>Every function has a multi-line docstring</li>
+        <li>Inline comments throughout</li>
+        <li>Module-level docstrings in all files</li>
+        <li>PEP 8 compliant, 120-char line limit</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="slide-num">10 / 11</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: Iterative Optimisation & Summary                    -->
+<!-- ============================================================ -->
+<div class="slide">
+  <h2>9 &nbsp; Iterative Optimisation &amp; Summary</h2>
+
+  <div>
+    <h3>What was optimised</h3>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><strong>GPU environment:</strong> Resolved sm_120 compatibility with PyTorch nightly + CUDA 12.8</li>
+          <li><strong>MTCNN tuning:</strong> <code>margin=20</code>, <code>select_largest=True</code>, <code>post_process=False</code> for low-res FER2013</li>
+          <li><strong>DVC workflow:</strong> Automated push handles detection, staging, hook retries, amends</li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li><strong>Gradio:</strong> Lazy-loaded singleton detector;<br>auto-predict on image change</li>
+          <li><strong>Validation:</strong> Added MCC, baseline comparisons, misclassified-sample visualisation</li>
+          <li><strong>Testing:</strong> Expanded to 109 unit tests at ~90% coverage with mocked pipelines</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h3>Development timeline</h3>
+    <table>
+    <tr><th>Date</th><th>Milestone</th></tr>
+    <tr><td>2026-02-11</td><td>Kick-off: <code>uv init</code>, scaffolding, dotfiles, pre-commit hooks</td></tr>
+    <tr><td>2026-03-25</td><td>Data ingestion via DVC (FER2013 → S3)</td></tr>
+    <tr><td>2026-03-26</td><td>Dataset exploration, model integration, validation piping</td></tr>
+    <tr><td>2026-03-27</td><td>Documentation, Gradio web UI</td></tr>
+    <tr><td>2026-03-28</td><td>Test suite to ~90% coverage</td></tr>
+    </table>
+  </div>
+
+  <div class="callout success">
+    <strong>Summary:</strong> All concept-note components implemented — face detection, emotion inference,
+    valence mapping, validation, Gradio UI, CLI, and Jupyter notebook. 82.86% accuracy on 2,999 FER2013
+    test images vs. 33.3% random baseline, with strong F1 and MCC scores.
+  </div>
+
+  <span class="slide-num">11 / 11</span>
+</div>
+
+</body>
+</html>

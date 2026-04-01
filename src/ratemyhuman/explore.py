@@ -20,7 +20,6 @@ from ratemyhuman.model import (
     VALENCE_MAP,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 SPLITS: list[str] = ["train", "val", "test"]
