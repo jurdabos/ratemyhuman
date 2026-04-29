@@ -256,12 +256,15 @@ print(f"Misclassified examples: {len(report.misclassified)}")
 uv run pytest tests/ -v -m "not slow"
 ```
 ```
-46 passed in 5.70s
+110 passed, 3 deselected, 1 warning in 13.12s
 ```
 
 ```shell
 uv run pytest tests/ -v -m "slow"
 ```
 ```
-3 passed in 7.20s
+3 passed, 110 deselected, 1 warning in 8.60s
 ```
+
+The single warning is an upstream PyTorch nightly `FutureWarning` (`torch._dynamo.allow_in_graph`)
+from outside our code; it will go away when we move off the nightly to a stable release.
