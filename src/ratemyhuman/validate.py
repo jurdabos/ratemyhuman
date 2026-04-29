@@ -7,6 +7,7 @@ load dataset → map ground truth → batch inference → compute metrics → pl
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +34,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ValidationReport:
-    """Holds the output of a validation run."""
+    """
+    Holds the output of a validation run.
+
+    Aggregates the headline metrics, the full confusion matrix, per-class
+    breakdowns, baselines, and a sample of misclassified items so the
+    report can be both summarised and visualised downstream.
+    """
     accuracy: float
     f1_macro: float
     f1_weighted: float
@@ -44,10 +51,15 @@ class ValidationReport:
     skipped_images: int = 0
     baseline_random: float = 0.0
     baseline_majority: float = 0.0
-    misclassified: list[dict] = field(default_factory=list)
+    misclassified: list[dict[str, Any]] = field(default_factory=list)
 
     def summary(self) -> str:
-        """Returns a multi-line text summary of the validation results."""
+        """
+        Returns a multi-line text summary of the validation results.
+
+        Mirrors the layout used in the CLI/log output: headline metrics,
+        per-class precision/recall/F1, and the raw confusion matrix.
+        """
         lines = [
             f"{'='*60}",
             f"Validation Report  ({self.total_images - self.skipped_images} evaluated, "
@@ -134,7 +146,7 @@ class ValidationRunner:
         y_true: list[str] = []
         y_pred: list[str] = []
         skipped = 0
-        misclassified: list[dict] = []
+        misclassified: list[dict[str, Any]] = []
         for i, (img_path, true_valence) in enumerate(samples):
             if (i + 1) % 500 == 0 or i == 0:
                 logger.info(f"  Processing {i + 1}/{total}...")
@@ -161,7 +173,7 @@ class ValidationRunner:
         y_pred: list[str],
         total: int,
         skipped: int,
-        misclassified: list[dict],
+        misclassified: list[dict[str, Any]],
     ) -> ValidationReport:
         """
         Computes all validation metrics from true/predicted label lists.
@@ -210,11 +222,23 @@ class ValidationRunner:
 
     @staticmethod
     def plot_confusion_matrix(report: ValidationReport, output_dir: Path) -> Path:
-        """Plots and saves a confusion matrix heatmap."""
+        """
+        Plots and saves a confusion matrix heatmap.
+
+        Normalises rows by true-class support to display percentages and
+        overlays raw counts in a smaller font for context.
+        """
         fig, ax = plt.subplots(figsize=(7, 6))
         cm = report.confusion_matrix
         # Normalising by row (true class) for percentage display
-        cm_norm = cm.astype(float) / cm.sum(axis=1, keepdims=True) * 100
+        # Guarding against empty true-class rows (e.g. tiny test fixtures)
+        row_sums = cm.sum(axis=1, keepdims=True)
+        cm_norm = np.divide(
+            cm.astype(float),
+            row_sums,
+            out=np.zeros(cm.shape, dtype=float),
+            where=row_sums != 0,
+        ) * 100
         sns.heatmap(
             cm_norm,
             annot=True,
@@ -249,7 +273,12 @@ class ValidationRunner:
 
     @staticmethod
     def plot_misclassified(report: ValidationReport, output_dir: Path, n: int = 12) -> Path | None:
-        """Plots a grid of misclassified sample images with annotations."""
+        """
+        Plots a grid of misclassified sample images with annotations.
+
+        Returns ``None`` when the report has no misclassified samples,
+        otherwise saves the grid as ``misclassified_samples.png``.
+        """
         samples = report.misclassified[:n]
         if not samples:
             logger.info("No misclassified samples to plot.")

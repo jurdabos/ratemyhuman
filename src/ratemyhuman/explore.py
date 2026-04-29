@@ -26,7 +26,12 @@ SPLITS: list[str] = ["train", "val", "test"]
 
 
 def _find_project_root() -> Path:
-    """Locates the project root by walking up to find pyproject.toml."""
+    """
+    Locates the project root by walking up to find pyproject.toml.
+
+    Falls back to the module's own directory if no marker is found,
+    keeping the helper safe to call from arbitrary import locations.
+    """
     current = Path(__file__).resolve().parent
     for parent in [current, *current.parents]:
         if (parent / "pyproject.toml").exists():
@@ -96,8 +101,16 @@ def check_integrity(data_dir: Path) -> dict[str, list[str]]:
 
 
 def plot_class_distribution(counts: dict[str, dict[str, int]], output_dir: Path) -> Path:
-    """Plots per-split emotion class distribution as grouped bar chart."""
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
+    """
+    Plots per-split emotion class distribution as a grouped bar chart.
+
+    Saves the figure as ``class_distribution.png`` under ``output_dir``
+    and returns the resulting path.
+    """
+    # Using constrained layout to fit suptitle + rotated x-tick labels without tight_layout warnings;
+    # passing layout at creation time avoids the "axes sizes collapsed to zero" warning that
+    # set_layout_engine triggers when applied after the axes geometry has already been computed.
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True, layout="constrained")
     fig.suptitle("FER-2013 — Emotion Class Distribution", fontsize=14, fontweight="bold")
     for ax, split in zip(axes, SPLITS):
         if split not in counts:
@@ -108,22 +121,27 @@ def plot_class_distribution(counts: dict[str, dict[str, int]], output_dir: Path)
         ax.set_title(split.capitalize(), fontsize=12)
         ax.set_xlabel("")
         ax.tick_params(axis="x", rotation=45)
-        # Adding count labels on bars
-        for bar, val in zip(bars, values):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 30,
-                    str(val), ha="center", va="bottom", fontsize=8)
+        # Adding count labels on bars (display-space padding so the offset stays sane regardless of bar magnitude)
+        ax.bar_label(bars, labels=[str(v) for v in values], padding=3, fontsize=8)
     axes[0].set_ylabel("Image count")
-    plt.tight_layout()
     out = output_dir / "class_distribution.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight")
+    # Constrained layout already produces a tight figure; bbox_inches="tight" would re-run it and warn
+    fig.savefig(out, dpi=150)
     plt.close(fig)
     logger.info(f"Saved class distribution plot to {out}")
     return out
 
 
 def plot_valence_distribution(valence_counts: dict[str, dict[str, int]], output_dir: Path) -> Path:
-    """Plots per-split valence distribution as grouped bar chart."""
-    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True)
+    """
+    Plots per-split valence distribution as a grouped bar chart.
+
+    Saves the figure as ``valence_distribution.png`` under ``output_dir``
+    and returns the resulting path.
+    """
+    # Using constrained layout to fit suptitle and per-axis labels without tight_layout warnings;
+    # passing layout at creation time keeps the engine consistent with the initial axes geometry.
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5), sharey=True, layout="constrained")
     fig.suptitle("FER-2013 — Valence Distribution (3-class)", fontsize=14, fontweight="bold")
     valence_order = ["Negative", "Neutral", "Positive"]
     for ax, split in zip(axes, SPLITS):
@@ -133,20 +151,24 @@ def plot_valence_distribution(valence_counts: dict[str, dict[str, int]], output_
         colours = [VALENCE_COLOURS[v] for v in valence_order]
         bars = ax.bar(valence_order, values, color=colours, edgecolor="white", linewidth=0.5)
         ax.set_title(split.capitalize(), fontsize=12)
-        for bar, val in zip(bars, values):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 30,
-                    str(val), ha="center", va="bottom", fontsize=9)
+        # Adding count labels on bars (display-space padding so the offset stays sane regardless of bar magnitude)
+        ax.bar_label(bars, labels=[str(v) for v in values], padding=3, fontsize=9)
     axes[0].set_ylabel("Image count")
-    plt.tight_layout()
     out = output_dir / "valence_distribution.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight")
+    # Constrained layout already produces a tight figure; bbox_inches="tight" would re-run it and warn
+    fig.savefig(out, dpi=150)
     plt.close(fig)
     logger.info(f"Saved valence distribution plot to {out}")
     return out
 
 
 def plot_sample_grid(data_dir: Path, output_dir: Path, split: str = "train", n_per_class: int = 5) -> Path:
-    """Plots a grid of sample images (n per emotion class) from a given split."""
+    """
+    Plots a grid of sample images (n per emotion class) from a given split.
+
+    Useful as a sanity check that the on-disk layout matches the assumed
+    ``data/<split>/<emotion>/*.png`` convention.
+    """
     fig, axes = plt.subplots(len(EMOTION_CLASSES), n_per_class,
                              figsize=(n_per_class * 1.5, len(EMOTION_CLASSES) * 1.8))
     fig.suptitle(f"FER-2013 — Sample Images ({split})", fontsize=14, fontweight="bold")
@@ -170,7 +192,12 @@ def plot_sample_grid(data_dir: Path, output_dir: Path, split: str = "train", n_p
 
 
 def print_summary(counts: dict[str, dict[str, int]], valence_counts: dict[str, dict[str, int]]) -> None:
-    """Prints a text summary of dataset statistics to the console."""
+    """
+    Prints a text summary of dataset statistics to the console.
+
+    Logs per-split totals, per-emotion counts, and the aggregated valence
+    breakdown via the module logger at ``INFO`` level.
+    """
     for split in SPLITS:
         if split not in counts:
             continue

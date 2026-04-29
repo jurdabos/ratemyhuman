@@ -79,14 +79,25 @@ def map_label_to_valence(emotion_label: str) -> str:
 
 @dataclass
 class ValenceResult:
-    """Holds the output of a single valence classification."""
+    """
+    Holds the output of a single valence classification.
+
+    Bundles the predicted valence label, its confidence, and the full
+    7-class emotion + 3-class valence score breakdowns produced by the
+    :class:`ValenceDetector` pipeline.
+    """
     label: str
     confidence: float
     emotion_scores: dict[str, float] = field(default_factory=dict)
     valence_scores: dict[str, float] = field(default_factory=dict)
 
     def __str__(self) -> str:
-        """Returns a human-readable summary."""
+        """
+        Returns a human-readable one-line summary.
+
+        Includes the valence label, its confidence, and the dominant
+        emotion with its own probability for quick CLI inspection.
+        """
         top_emotion = max(self.emotion_scores, key=self.emotion_scores.get)
         return (
             f"Valence: {self.label} ({self.confidence:.1%}) | "
@@ -127,7 +138,9 @@ class ValenceDetector:
         self.processor = ViTImageProcessor.from_pretrained(model_id)
         self.emotion_model = ViTForImageClassification.from_pretrained(model_id).to(self.device)
         self.emotion_model.eval()
-        logger.info(f"Loaded emotion model: {model_id} ({sum(p.numel() for p in self.emotion_model.parameters()) / 1e6:.1f}M params)")
+        # Counting parameters for the load-time log line
+        n_params_m = sum(p.numel() for p in self.emotion_model.parameters()) / 1e6
+        logger.info(f"Loaded emotion model: {model_id} ({n_params_m:.1f}M params)")
 
     def detect_face(self, image: Image.Image) -> np.ndarray | None:
         """

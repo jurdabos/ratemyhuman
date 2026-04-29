@@ -361,13 +361,79 @@ output. The validation module produces inline plots (confusion matrix, sample pr
 - Format: CSV with pixel arrays (or extracted image folders)
 - Known issues: Noisy labels (~65% inter-annotator agreement), low resolution, some non-face images
 
-**For our pipeline**: We use FER2013 purely for **validation** (not training). The pretrained model is
-sourced from HuggingFace and was likely trained on AffectNet or a combination of FER datasets. Using
-FER2013's test split as an independent benchmark provides a fair out-of-distribution evaluation.
+**For our pipeline**: we use FER-2013's test split for validation. The pretrained model that ships in the
+final implementation is `trpakov/vit-face-expression`, which is itself fine-tuned on FER-2013's training
+split — so this is an **in-distribution evaluation**: it measures the deployed pipeline's faithfulness to
+the labels the model was trained against, not its generalisation to a held-out distribution. The headline
+metrics in the validation report (Accuracy 82.86 %, F1 macro 0.803, MCC 0.728) should be read in that
+light. A future out-of-distribution assessment on AffectNet — which carries continuous valence-arousal
+annotations directly aligned with our framing — is listed as a candidate enhancement (cf. README *Future
+work* §1).
 
 If higher-resolution validation is desired, **AffectNet** (available via academic license) provides ~420k
 images with both categorical emotion labels and continuous valence-arousal annotations — directly aligning
 with our valence-based framing. This is a future enhancement option.
+
+### 4.8 Implementation notes (post-P1)
+
+This concept note was authored at P1 (project planning). The shipped implementation made a small number
+of pragmatic simplifications and additions, captured here so the document remains an accurate guide to
+the final state of the repository.
+
+**Architectural simplifications relative to the §4.1 class diagram**:
+
+- The Gradio web UI is implemented as **module-level functions** in `src/ratemyhuman/app.py` (`predict()`,
+  `build_app()`, `launch()`, plus private helpers `_get_detector()`, `_reset()`, `_format_status_card()`,
+  `_format_result_card()`) rather than a `GradioInterface` class. The lazy-singleton `_detector` plays the
+  role the class would have.
+- The notebook deliverable is the freestanding `docs/presentation.ipynb`; there is no `NotebookRunner` class.
+- `ValenceDetector.detect_face()` returns the **cropped face directly** (`np.ndarray | None`) rather than a
+  separate `BoundingBox` followed by a crop step — the two stages are fused inside the MTCNN call.
+- `ValenceDetector.predict_emotion()` returns a plain `np.ndarray` of 7 probabilities rather than a bespoke
+  `EmotionVector` type.
+- The emotion model in §4.1 is typed as `PretrainedCNN`; the model that shipped is a Vision Transformer
+  (`ViTForImageClassification`).
+- `ValidationRunner.compute_confusion_matrix()` and `plot_results()` from the diagram are realised as
+  `compute_metrics()` (returns the full `ValidationReport` including the confusion matrix) plus two specific
+  plot methods, `plot_confusion_matrix()` and `plot_misclassified()`.
+
+**Additions to `ValidationReport`**:
+
+The report ships with five extra fields beyond the §4.1 diagram: `mcc`, `total_images`, `skipped_images`,
+`baseline_random`, `baseline_majority`, and a `misclassified` slice that feeds the qualitative-analysis plot.
+
+**Additions to the metrics suite (relative to §4.4)**:
+
+The Matthews Correlation Coefficient (MCC) is computed alongside accuracy and F1; it is more robust on
+imbalanced sets than accuracy alone. The validation runner also tracks the **MTCNN no-face skip rate**
+(~16 % of FER-2013's 48×48 thumbnails — 590 of 3,589) which §4.4 did not anticipate.
+
+**Additions to the surface area (not in §4 deliverables)**:
+
+- `ValenceDetector.classify_array(image: np.ndarray | Image.Image)` for in-memory inputs (used by the
+  Gradio UI and the unit tests).
+- `--device cpu` flag on `classify` and `validate`, plus auto-detection in `demo`, so the pipeline runs
+  without a GPU at reduced speed.
+- `uv run ratemyhuman explore` — promoted from a one-off planning phase (§3.1) to a permanent CLI verb
+  that produces `class_distribution.png`, `valence_distribution.png`, and per-emotion sample grids under
+  `docs/`.
+- `uv run ratemyhuman push` — DVC + git + pre-commit + dual-push automation for the maintainer workflow.
+- **DVC + S3 dataset management** — the FER-2013 dataset is now tracked via DVC pointer files alongside a
+  Kaggle download fallback (cf. README *Installation* Step 6). §4.7 was authored before this was decided.
+
+**Minor terminology drift**:
+
+§4.5 mentions `timm` as a candidate library; the final dependency tree uses `transformers` only. §4.6's
+"JupyterLab" entry is satisfied by `docs/presentation.ipynb` running under any Jupyter frontend; no
+JupyterLab-specific dependency is pinned.
+
+**Items unchanged from P1**:
+
+The §4.3 classification flow (detect → preprocess → infer → map) and the §2.3 valence mapping table are
+bit-for-bit identical to the implementation in `model.py`. The framework choices in §4.5 (Python 3.12, uv,
+PyTorch nightly + CUDA 12.8, facenet-pytorch, HuggingFace transformers, scikit-learn, matplotlib + seaborn,
+Gradio, pytest) and the dev environment in §4.6 (Windows 11 + RTX 5070 Ti, Blackwell sm_120) match the
+lockfile and the README.
 
 ---
 

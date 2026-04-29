@@ -56,6 +56,14 @@ torchvision = { index = "pytorch-cu128" }
 [tool.pytest.ini_options]
 markers = ["slow: marks tests that require GPU and model weights (deselect with '-m \"not slow\"')"]
 
+[tool.coverage.report]
+# Excluding standard script-entry guards: lines under `if __name__ == "__main__":`
+# are only executed when a module is run directly (e.g. `python -m ratemyhuman.main`),
+# which is out of scope for the unit-test suite.
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",

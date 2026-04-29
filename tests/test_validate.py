@@ -11,16 +11,22 @@ from ratemyhuman.validate import ValidationReport, ValidationRunner, run_validat
 
 
 class TestComputeMetrics:
-    """Tests the static compute_metrics method with known inputs."""
+    """
+    Tests the static compute_metrics method with known inputs.
+    """
 
     def _make_report(self, y_true, y_pred):
-        """Helper to build a report from label lists."""
+        """
+        Helper to build a report from label lists.
+        """
         return ValidationRunner.compute_metrics(
             y_true, y_pred, total=len(y_true), skipped=0, misclassified=[],
         )
 
     def test_perfect_predictions(self):
-        """Verifies perfect accuracy and F1 when all predictions match."""
+        """
+        Verifies perfect accuracy and F1 when all predictions match.
+        """
         y = ["Negative"] * 5 + ["Neutral"] * 3 + ["Positive"] * 4
         report = self._make_report(y, y)
         assert report.accuracy == pytest.approx(1.0)
@@ -28,20 +34,26 @@ class TestComputeMetrics:
         assert report.f1_weighted == pytest.approx(1.0)
 
     def test_all_wrong_predictions(self):
-        """Verifies zero accuracy when every prediction is wrong."""
+        """
+        Verifies zero accuracy when every prediction is wrong.
+        """
         y_true = ["Negative"] * 4 + ["Positive"] * 4
         y_pred = ["Positive"] * 4 + ["Negative"] * 4
         report = self._make_report(y_true, y_pred)
         assert report.accuracy == pytest.approx(0.0)
 
     def test_confusion_matrix_shape(self):
-        """Verifies the confusion matrix is 3×3."""
+        """
+        Verifies the confusion matrix is 3×3.
+        """
         y = ["Negative", "Neutral", "Positive"]
         report = self._make_report(y, y)
         assert report.confusion_matrix.shape == (3, 3)
 
     def test_confusion_matrix_diagonal(self):
-        """Verifies diagonal entries match correct predictions."""
+        """
+        Verifies diagonal entries match correct predictions.
+        """
         y_true = ["Negative"] * 3 + ["Neutral"] * 2 + ["Positive"] * 5
         report = self._make_report(y_true, y_true)
         assert report.confusion_matrix[0, 0] == 3
@@ -49,14 +61,18 @@ class TestComputeMetrics:
         assert report.confusion_matrix[2, 2] == 5
 
     def test_baselines(self):
-        """Verifies random and majority baselines are computed correctly."""
+        """
+        Verifies random and majority baselines are computed correctly.
+        """
         y_true = ["Negative"] * 10 + ["Neutral"] * 3 + ["Positive"] * 7
         report = self._make_report(y_true, y_true)
         assert report.baseline_random == pytest.approx(1 / 3)
         assert report.baseline_majority == pytest.approx(10 / 20)
 
     def test_skipped_count(self):
-        """Verifies skipped image count is passed through."""
+        """
+        Verifies skipped image count is passed through.
+        """
         report = ValidationRunner.compute_metrics(
             ["Negative", "Positive"], ["Negative", "Positive"],
             total=5, skipped=3, misclassified=[],
@@ -65,7 +81,9 @@ class TestComputeMetrics:
         assert report.skipped_images == 3
 
     def test_per_class_metrics_keys(self):
-        """Verifies per-class metrics contain all three valence classes."""
+        """
+        Verifies per-class metrics contain all three valence classes.
+        """
         y = ["Negative", "Neutral", "Positive"]
         report = self._make_report(y, y)
         assert set(report.per_class_metrics.keys()) == {"Negative", "Neutral", "Positive"}
@@ -76,13 +94,17 @@ class TestComputeMetrics:
             assert "support" in report.per_class_metrics[cls]
 
     def test_mcc_perfect(self):
-        """Verifies MCC is 1.0 for perfect predictions."""
+        """
+        Verifies MCC is 1.0 for perfect predictions.
+        """
         y = ["Negative"] * 5 + ["Neutral"] * 5 + ["Positive"] * 5
         report = self._make_report(y, y)
         assert report.mcc == pytest.approx(1.0)
 
     def test_misclassified_passthrough(self):
-        """Verifies misclassified samples are stored in the report."""
+        """
+        Verifies misclassified samples are stored in the report.
+        """
         sample = [{"path": "test.png", "true": "Negative", "pred": "Positive",
                     "confidence": 0.9, "emotion_scores": {}}]
         report = ValidationRunner.compute_metrics(
@@ -93,10 +115,14 @@ class TestComputeMetrics:
 
 
 class TestValidationReportSummary:
-    """Tests the report summary formatting."""
+    """
+    Tests the report summary formatting.
+    """
 
     def test_summary_contains_accuracy(self):
-        """Verifies the summary includes the accuracy value."""
+        """
+        Verifies the summary includes the accuracy value.
+        """
         report = ValidationRunner.compute_metrics(
             ["Negative", "Positive", "Positive"],
             ["Negative", "Positive", "Negative"],
@@ -115,11 +141,15 @@ class TestValidationReportSummary:
 # ValidationRunner tests — mocked detector (no GPU required)
 # ---------------------------------------------------------------------------
 class TestValidationRunner:
-    """Tests the ValidationRunner class with mocked dependencies."""
+    """
+    Tests the ValidationRunner class with mocked dependencies.
+    """
 
     @pytest.fixture
     def sample_dataset(self, tmp_path):
-        """Creates a minimal labelled dataset for validation testing."""
+        """
+        Creates a minimal labelled dataset for validation testing.
+        """
         for emotion in ["happy", "angry", "neutral"]:
             d = tmp_path / emotion
             d.mkdir()
@@ -128,7 +158,9 @@ class TestValidationRunner:
         return tmp_path
 
     def test_load_dataset(self, sample_dataset):
-        """Verifies that load_dataset returns correct (path, valence) pairs."""
+        """
+        Verifies that load_dataset returns correct (path, valence) pairs.
+        """
         runner = ValidationRunner(MagicMock(), sample_dataset)
         samples = runner.load_dataset()
         assert len(samples) == 9
@@ -136,7 +168,9 @@ class TestValidationRunner:
         assert valences == {"Positive", "Negative", "Neutral"}
 
     def test_load_dataset_skips_unknown(self, tmp_path):
-        """Verifies that unrecognised directories are skipped."""
+        """
+        Verifies that unrecognised directories are skipped.
+        """
         (tmp_path / "happy").mkdir()
         Image.new("L", (48, 48)).save(tmp_path / "happy" / "0.png")
         (tmp_path / "contempt").mkdir()
@@ -146,10 +180,14 @@ class TestValidationRunner:
         assert len(samples) == 1
 
     def test_run_validation_all_correct(self, sample_dataset):
-        """Verifies perfect metrics when the detector is always correct."""
+        """
+        Verifies perfect metrics when the detector is always correct.
+        """
         mock_detector = MagicMock()
         def classify_side_effect(path):
-            """Returns the correct valence for each image."""
+            """
+            Returns the correct valence for each image.
+            """
             valence = map_label_to_valence(path.parent.name)
             r = MagicMock()
             r.label = valence
@@ -164,11 +202,15 @@ class TestValidationRunner:
         assert report.skipped_images == 0
 
     def test_run_validation_with_skips(self, sample_dataset):
-        """Verifies that ValueError exceptions are counted as skipped."""
+        """
+        Verifies that ValueError exceptions are counted as skipped.
+        """
         mock_detector = MagicMock()
         call_count = [0]
         def classify_effect(path):
-            """Alternates between success and failure to simulate partial skips."""
+            """
+            Alternates between success and failure to simulate partial skips.
+            """
             call_count[0] += 1
             if call_count[0] % 2 == 0:
                 raise ValueError("No face")
@@ -186,10 +228,14 @@ class TestValidationRunner:
 
 
 class TestPlotMethods:
-    """Tests the ValidationRunner plot static methods."""
+    """
+    Tests the ValidationRunner plot static methods.
+    """
 
     def _make_report(self):
-        """Creates a synthetic ValidationReport for plot testing."""
+        """
+        Creates a synthetic ValidationReport for plot testing.
+        """
         return ValidationReport(
             accuracy=0.80, f1_macro=0.75, f1_weighted=0.78, mcc=0.65,
             confusion_matrix=np.array([[10, 1, 0], [2, 8, 1], [0, 1, 9]]),
@@ -203,14 +249,18 @@ class TestPlotMethods:
         )
 
     def test_plot_confusion_matrix(self, tmp_path):
-        """Verifies confusion matrix plot is saved."""
+        """
+        Verifies confusion matrix plot is saved.
+        """
         report = self._make_report()
         path = ValidationRunner.plot_confusion_matrix(report, tmp_path)
         assert path.exists()
         assert path.name == "confusion_matrix.png"
 
     def test_plot_misclassified_with_samples(self, tmp_path):
-        """Verifies misclassified grid is saved when samples exist."""
+        """
+        Verifies misclassified grid is saved when samples exist.
+        """
         report = self._make_report()
         img_path = tmp_path / "sample.png"
         Image.new("L", (48, 48)).save(img_path)
@@ -223,18 +273,24 @@ class TestPlotMethods:
         assert path.exists()
 
     def test_plot_misclassified_empty(self, tmp_path):
-        """Verifies None is returned when no misclassified samples exist."""
+        """
+        Verifies None is returned when no misclassified samples exist.
+        """
         report = self._make_report()
         result = ValidationRunner.plot_misclassified(report, tmp_path)
         assert result is None
 
 
 class TestRunValidationConvenience:
-    """Tests the run_validation convenience function."""
+    """
+    Tests the run_validation convenience function.
+    """
 
     @patch("ratemyhuman.model.ValenceDetector")
     def test_runs_pipeline(self, MockDetector, tmp_path):
-        """Verifies the convenience function runs the full pipeline."""
+        """
+        Verifies the convenience function runs the full pipeline.
+        """
         for emotion in ["happy", "angry"]:
             d = tmp_path / "data" / "test" / emotion
             d.mkdir(parents=True)

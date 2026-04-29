@@ -20,7 +20,9 @@ from ratemyhuman.model import EMOTION_LABELS
 
 @pytest.fixture
 def sample_data(tmp_path):
-    """Creates a minimal FER2013-like directory structure with sample images."""
+    """
+    Creates a minimal FER2013-like directory structure with sample images.
+    """
     for split in ["train", "test"]:
         for emotion in EMOTION_LABELS:
             emotion_dir = tmp_path / split / emotion
@@ -31,10 +33,14 @@ def sample_data(tmp_path):
 
 
 class TestCountImages:
-    """Tests the count_images function."""
+    """
+    Tests the count_images function.
+    """
 
     def test_counts_all_splits_and_emotions(self, sample_data):
-        """Verifies correct counts for each split and emotion class."""
+        """
+        Verifies correct counts for each split and emotion class.
+        """
         counts = count_images(sample_data)
         assert "train" in counts
         assert "test" in counts
@@ -43,7 +49,9 @@ class TestCountImages:
                 assert counts[split][emotion] == 2
 
     def test_missing_split_skipped(self, tmp_path):
-        """Verifies that a missing split directory is handled gracefully."""
+        """
+        Verifies that a missing split directory is handled gracefully.
+        """
         for emotion in EMOTION_LABELS:
             (tmp_path / "train" / emotion).mkdir(parents=True)
             Image.new("L", (48, 48)).save(tmp_path / "train" / emotion / "0.png")
@@ -53,10 +61,14 @@ class TestCountImages:
 
 
 class TestValenceDistribution:
-    """Tests the valence_distribution function."""
+    """
+    Tests the valence_distribution function.
+    """
 
     def test_aggregation(self, sample_data):
-        """Verifies correct aggregation from 7 emotions to 3 valence classes."""
+        """
+        Verifies correct aggregation from 7 emotions to 3 valence classes.
+        """
         counts = count_images(sample_data)
         valence = valence_distribution(counts)
         for split in ["train", "test"]:
@@ -66,17 +78,23 @@ class TestValenceDistribution:
 
 
 class TestCheckIntegrity:
-    """Tests the check_integrity function."""
+    """
+    Tests the check_integrity function.
+    """
 
     def test_all_valid(self, sample_data):
-        """Verifies no issues for a clean dataset."""
+        """
+        Verifies no issues for a clean dataset.
+        """
         issues = check_integrity(sample_data)
         assert len(issues["corrupt"]) == 0
         assert len(issues["wrong_size"]) == 0
         assert len(issues["wrong_mode"]) == 0
 
     def test_wrong_size_detected(self, tmp_path):
-        """Verifies detection of images with incorrect dimensions."""
+        """
+        Verifies detection of images with incorrect dimensions.
+        """
         d = tmp_path / "train" / "happy"
         d.mkdir(parents=True)
         Image.new("L", (64, 64)).save(d / "wrong.png")
@@ -84,7 +102,9 @@ class TestCheckIntegrity:
         assert len(issues["wrong_size"]) == 1
 
     def test_wrong_mode_detected(self, tmp_path):
-        """Verifies detection of images with wrong colour mode."""
+        """
+        Verifies detection of images with wrong colour mode.
+        """
         d = tmp_path / "train" / "angry"
         d.mkdir(parents=True)
         Image.new("RGB", (48, 48)).save(d / "rgb.png")
@@ -93,10 +113,14 @@ class TestCheckIntegrity:
 
 
 class TestPlotFunctions:
-    """Tests that plotting functions produce output files."""
+    """
+    Tests that plotting functions produce output files.
+    """
 
     def test_plot_class_distribution(self, sample_data, tmp_path):
-        """Verifies class distribution plot is saved."""
+        """
+        Verifies class distribution plot is saved.
+        """
         counts = count_images(sample_data)
         out = tmp_path / "out"
         out.mkdir()
@@ -105,7 +129,9 @@ class TestPlotFunctions:
         assert path.name == "class_distribution.png"
 
     def test_plot_valence_distribution(self, sample_data, tmp_path):
-        """Verifies valence distribution plot is saved."""
+        """
+        Verifies valence distribution plot is saved.
+        """
         counts = count_images(sample_data)
         val = valence_distribution(counts)
         out = tmp_path / "out"
@@ -115,7 +141,9 @@ class TestPlotFunctions:
         assert path.name == "valence_distribution.png"
 
     def test_plot_sample_grid(self, sample_data, tmp_path):
-        """Verifies sample grid plot is saved."""
+        """
+        Verifies sample grid plot is saved.
+        """
         out = tmp_path / "out"
         out.mkdir()
         path = plot_sample_grid(sample_data, out, split="train", n_per_class=2)
@@ -124,10 +152,14 @@ class TestPlotFunctions:
 
 
 class TestPrintSummary:
-    """Tests the print_summary function."""
+    """
+    Tests the print_summary function.
+    """
 
     def test_logs_split_info(self, sample_data, caplog):
-        """Verifies that summary information is logged for each split."""
+        """
+        Verifies that summary information is logged for each split.
+        """
         counts = count_images(sample_data)
         val = valence_distribution(counts)
         with caplog.at_level(logging.INFO, logger="ratemyhuman.explore"):
@@ -137,10 +169,14 @@ class TestPrintSummary:
 
 
 class TestRunExploration:
-    """Tests the run_exploration integration function."""
+    """
+    Tests the run_exploration integration function.
+    """
 
     def test_full_run(self, sample_data, tmp_path):
-        """Verifies the full exploration pipeline produces all expected outputs."""
+        """
+        Verifies the full exploration pipeline produces all expected outputs.
+        """
         out = tmp_path / "out"
         run_exploration(data_dir=sample_data, output_dir=out)
         assert (out / "class_distribution.png").exists()
@@ -149,7 +185,9 @@ class TestRunExploration:
         assert (out / "sample_grid_test.png").exists()
 
     def test_missing_data_dir(self, tmp_path, caplog):
-        """Verifies graceful handling of a nonexistent data directory."""
+        """
+        Verifies graceful handling of a nonexistent data directory.
+        """
         with caplog.at_level(logging.ERROR, logger="ratemyhuman.explore"):
             run_exploration(data_dir=tmp_path / "nope", output_dir=tmp_path)
         assert "not found" in caplog.text.lower()

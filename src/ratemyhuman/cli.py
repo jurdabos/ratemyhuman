@@ -46,7 +46,12 @@ _CODE_EXTENSIONS: set[str] = {
 
 
 def _get_project_root() -> Path:
-    """Locates the project root by walking up to find pyproject.toml + .dvc/."""
+    """
+    Locates the project root by walking up to find pyproject.toml + .dvc/.
+
+    Falls back to the nearest pyproject.toml ancestor, or the current
+    working directory if no marker is found.
+    """
     current = Path.cwd()
     for parent in [current, *current.parents]:
         if (parent / "pyproject.toml").exists() and (parent / ".dvc").is_dir():
@@ -58,7 +63,12 @@ def _get_project_root() -> Path:
 
 
 def _run(cmd: list[str], cwd: Path, check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Runs a subprocess command, returning CompletedProcess."""
+    """
+    Runs a subprocess command, returning CompletedProcess.
+
+    Captures stdout/stderr as UTF-8 text so callers can parse them; raises
+    ``CalledProcessError`` when ``check`` is True and the command fails.
+    """
     return subprocess.run(
         cmd,
         cwd=cwd,
@@ -70,13 +80,22 @@ def _run(cmd: list[str], cwd: Path, check: bool = True) -> subprocess.CompletedP
 
 
 def _has_changes(root: Path) -> bool:
-    """Checks whether the working tree has any staged or unstaged changes."""
+    """
+    Checks whether the working tree has any staged or unstaged changes.
+
+    Used after commits to detect post-commit hooks that left the tree dirty.
+    """
     result = _run(["git", "status", "--porcelain"], cwd=root, check=False)
     return bool(result.stdout.strip())
 
 
 def _hooks_modified_files(output: str) -> bool:
-    """Checks whether pre-commit hooks modified files (retryable failure)."""
+    """
+    Checks whether pre-commit hooks modified files (retryable failure).
+
+    Inspects the captured commit output for the standard pre-commit warning
+    so the caller can re-stage and retry instead of aborting.
+    """
     return "files were modified by this hook" in output.lower()
 
 
@@ -127,7 +146,12 @@ def _find_dvc_changed_outs(root: Path) -> list[str]:
 
 
 def _auto_commit_message(dvc_files: list[str]) -> str:
-    """Generates an automatic commit message from DVC-added file names."""
+    """
+    Generates an automatic commit message from DVC-added file names.
+
+    Uses up to three file names verbatim and summarises the rest as
+    ``+N more``; falls back to a generic message when no files are given.
+    """
     if dvc_files:
         names = ", ".join(Path(f).name for f in dvc_files[:3])
         suffix = f" (+{len(dvc_files) - 3} more)" if len(dvc_files) > 3 else ""
@@ -138,7 +162,12 @@ def _auto_commit_message(dvc_files: list[str]) -> str:
 @click.group(context_settings={"max_content_width": shutil.get_terminal_size().columns})
 @click.option("-v", "--verbose", is_flag=True, help="Enable debug logging")
 def cli(verbose: bool) -> None:
-    """RateMyHuman: facial valence detection CLI."""
+    """
+    RateMyHuman: facial valence detection CLI.
+
+    Top-level command group exposing classify, explore, validate, demo,
+    and push subcommands; the ``--verbose`` flag enables debug logging.
+    """
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
@@ -369,5 +398,10 @@ def push(message: str | None, dry_run: bool, size_threshold: int) -> None:
 
 
 def main() -> None:
-    """Entry point for the ratemyhuman CLI."""
+    """
+    Entry point for the ratemyhuman CLI.
+
+    Thin wrapper around the Click command group so the project's
+    ``[project.scripts]`` entry can target a single callable.
+    """
     cli()
