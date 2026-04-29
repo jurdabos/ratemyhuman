@@ -125,3 +125,4 @@ webdrivers/
 docs/convert_html_to_pdf_with_uteal.txt
 scripts/function_report.txt
 *.gitignore.bak*
+/data
