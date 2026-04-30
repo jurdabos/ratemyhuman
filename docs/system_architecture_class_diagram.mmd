@@ -1,0 +1,86 @@
+---
+title: System Architecture — UML Class Diagram
+---
+classDiagram
+    class ValenceDetector {
+        +device: torch.device
+        +face_detector: MTCNN
+        +processor: ViTImageProcessor
+        +emotion_model: ViTForImageClassification
+        +detect_face(image) ndarray or None
+        +predict_emotion(face) ndarray
+        +map_to_valence(probs) ValenceResult$
+        +classify(image_path) ValenceResult
+        +classify_array(image) ValenceResult
+    }
+
+    class ValenceResult {
+        <<dataclass>>
+        +label: str
+        +confidence: float
+        +emotion_scores: dict
+        +valence_scores: dict
+    }
+
+    class ValidationRunner {
+        +detector: ValenceDetector
+        +dataset_path: Path
+        +load_dataset() list
+        +run_validation() ValidationReport
+        +compute_metrics() ValidationReport$
+        +plot_confusion_matrix() Path$
+        +plot_misclassified() Path or None$
+    }
+
+    class ValidationReport {
+        <<dataclass>>
+        +accuracy: float
+        +f1_macro: float
+        +f1_weighted: float
+        +mcc: float
+        +confusion_matrix: ndarray
+        +per_class_metrics: dict
+        +total_images: int
+        +skipped_images: int
+        +baseline_random: float
+        +baseline_majority: float
+        +misclassified: list
+        +summary() str
+    }
+
+    class app {
+        <<module>>
+        -_detector: ValenceDetector
+        +predict(image) tuple
+        +build_app() Blocks
+        +launch(share, port) None
+    }
+
+    class cli {
+        <<module>>
+        +classify()
+        +explore()
+        +validate()
+        +demo()
+        +push()
+    }
+
+    class explore {
+        <<module>>
+        +count_images() dict
+        +valence_distribution() dict
+        +check_integrity() dict
+        +plot_class_distribution() Path
+        +plot_valence_distribution() Path
+        +plot_sample_grid() Path
+        +run_exploration() None
+    }
+
+    ValenceDetector --> ValenceResult : produces
+    ValidationRunner --> ValenceDetector : uses
+    ValidationRunner --> ValidationReport : produces
+    app --> ValenceDetector : lazy singleton
+    cli ..> ValenceDetector : classify
+    cli ..> ValidationRunner : validate
+    cli ..> app : demo
+    cli ..> explore : explore

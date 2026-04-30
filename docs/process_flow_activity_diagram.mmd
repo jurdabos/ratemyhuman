@@ -1,0 +1,30 @@
+---
+title: Process Flow — UML Activity Diagram
+---
+flowchart LR
+    subgraph Classification["Classification Process"]
+        direction TB
+        A(["Image input — file path, ndarray, or PIL Image"]) --> B["MTCNN: detect largest face<br/>and return cropped tensor"]
+        B --> C{"Face found?"}
+        C -->|No| D["Raise ValueError —<br/>no face detected"]
+        C -->|Yes| E["Convert tensor →<br/>HWC uint8 RGB ndarray"]
+        E --> F["ViTImageProcessor:<br/>resize to 224×224<br/>+ ImageNet normalize"]
+        F --> G["Forward pass through<br/>trpakov/vit-face-expression (ViT)"]
+        G --> H["Softmax over logits →<br/>7 emotion probabilities"]
+        H --> I["Aggregate to 3-class valence:<br/>Negative = angry+disgust+fear+sad<br/>Neutral  = neutral<br/>Positive = happy+surprise"]
+        I --> J["argmax over valence scores;<br/>confidence = winning score"]
+        J --> K(["Return ValenceResult:<br/>label, confidence,<br/>emotion_scores, valence_scores"])
+    end
+
+    Classification ~~~ Validation
+
+    subgraph Validation["Validation Process"]
+        direction TB
+        M(["Load labelled dataset<br/>data/test/{emotion}/*.png"]) --> N["Map per-emotion folders →<br/>3-class valence ground truth"]
+        N --> O["For each image:<br/>run ValenceDetector.classify;<br/>count MTCNN no-face skips"]
+        O --> P["Compare predictions vs.<br/>ground-truth valence"]
+        P --> Q["Compute metrics:<br/>accuracy · F1 macro/weighted · MCC<br/>per-class P/R/F1 · confusion matrix<br/>random + majority baselines"]
+        Q --> R["Build ValidationReport<br/>+ misclassified samples slice"]
+        R --> S["Plot confusion-matrix heatmap<br/>+ misclassified grid → docs/"]
+        S --> T(["Validation report<br/>+ saved plots"])
+    end
