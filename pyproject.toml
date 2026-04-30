@@ -1,6 +1,6 @@
 [project]
 name = "ratemyhuman"
-version = "0.1.0"
+version = "1.0.0"
 description = "Facial valence detection from human face images"
 readme = "README.md"
 license = {text = "MIT"}
