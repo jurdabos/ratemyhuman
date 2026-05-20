@@ -437,19 +437,19 @@ pandas==3.0.1 \
     # via
     #   gradio
     #   seaborn
-pillow==12.1.1 \
-    --hash=sha256:21329ec8c96c6e979cd0dfd29406c40c1d52521a90544463057d2aaa937d66a6 \
-    --hash=sha256:339ffdcb7cbeaa08221cd401d517d4b1fe7a9ed5d400e4a8039719238620ca35 \
-    --hash=sha256:5d1f9575a12bed9e9eedd9a4972834b08c97a352bd17955ccdebfeca5913fa0a \
-    --hash=sha256:7aac39bcf8d4770d089588a2e1dd111cbaa42df5a94be3114222057d68336bd0 \
-    --hash=sha256:9ad8fa5937ab05218e2b6a4cff30295ad35afd2f83ac592e68c0d871bb0fdbc4 \
-    --hash=sha256:a0b1cd6232e2b618adcc54d9882e4e662a089d5768cd188f7c245b4c8c44a397 \
-    --hash=sha256:ab174cd7d29a62dd139c44bf74b698039328f45cb03b4596c43473a46656b2f3 \
-    --hash=sha256:ab323b787d6e18b3d91a72fc99b1a2c28651e4358749842b8f8dfacd28ef2052 \
-    --hash=sha256:adebb5bee0f0af4909c30db0d890c773d1a92ffe83da908e2e9e720f8edf3984 \
-    --hash=sha256:aee2810642b2898bb187ced9b349e95d2a7272930796e022efaf12e99dccd293 \
-    --hash=sha256:af9a332e572978f0218686636610555ae3defd1633597be015ed50289a03c523 \
-    --hash=sha256:bb66b7cc26f50977108790e2456b7921e773f23db5630261102233eb355a3b79
+pillow==12.2.0 \
+    --hash=sha256:01afa7cf67f74f09523699b4e88c73fb55c13346d212a59a2db1f86b0a63e8c5 \
+    --hash=sha256:03e7e372d5240cc23e9f07deca4d775c0817bffc641b01e9c3af208dbd300987 \
+    --hash=sha256:2d192a155bbcec180f8564f693e6fd9bccff5a7af9b32e2e4bf8c9c69dbad6b5 \
+    --hash=sha256:58f62cc0f00fd29e64b29f4fd923ffdb3859c9f9e6105bfc37ba1d08994e8940 \
+    --hash=sha256:62f5409336adb0663b7caa0da5c7d9e7bdbaae9ce761d34669420c2a801b2780 \
+    --hash=sha256:7371b48c4fa448d20d2714c9a1f775a81155050d383333e0a6c15b1123dda005 \
+    --hash=sha256:7f84204dee22a783350679a0333981df803dac21a0190d706a50475e361c93f5 \
+    --hash=sha256:a830b1a40919539d07806aa58e1b114df53ddd43213d9c8b75847eee6c0182b5 \
+    --hash=sha256:af73337013e0b3b46f175e79492d96845b16126ddf79c438d7ea7ff27783a414 \
+    --hash=sha256:b86024e52a1b269467a802258c25521e6d742349d760728092e1bc2d135b4d76 \
+    --hash=sha256:f3f40b3c5a968281fd507d519e444c35f0ff171237f4fdde090dd60699458421 \
+    --hash=sha256:fc3d34d4a8fbec3e88a79b92e5465e0f9b842b628675850d860b8bd300b159f5
     # via
     #   facenet-pytorch
     #   gradio
@@ -666,12 +666,12 @@ tomlkit==0.13.3 \
     --hash=sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1 \
     --hash=sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0
     # via gradio
-torch==2.12.0.dev20260324+cu128
+torch==2.12.0.dev20260408+cu128
     # via
     #   facenet-pytorch
     #   ratemyhuman
     #   torchvision
-torchvision==0.26.0.dev20260324+cu128
+torchvision==0.27.0.dev20260407+cu128
     # via
     #   facenet-pytorch
     #   ratemyhuman
@@ -686,7 +686,7 @@ transformers==5.3.0 \
     --hash=sha256:009555b364029da9e2946d41f1c5de9f15e6b1df46b189b7293f33a161b9c557 \
     --hash=sha256:50ac8c89c3c7033444fb3f9f53138096b997ebb70d4b5e50a2e810bf12d3d29a
     # via ratemyhuman
-triton==3.6.0+git9844da95 ; sys_platform == 'linux'
+triton==3.7.0+git282c8251 ; sys_platform == 'linux'
     # via torch
 typer==0.24.1 \
     --hash=sha256:112c1f0ce578bfb4cab9ffdabc68f031416ebcc216536611ba21f04e9aa84c9e \

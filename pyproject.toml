@@ -13,11 +13,19 @@ dependencies = [
     "gradio-client>=2.4.0",
     "matplotlib>=3.10.8",
     "numpy>=2.1",
-    "pillow>=12.1.1",
+    # pillow >=12.2.0 patches CVE-2025-48379 (fixed 11.3.0) and CVE-2026-25990 (fixed 12.1.1);
+    # the >=12.2.0 floor matches the ecosystem-wide bump and also clears CVE-2026-42311.
+    "pillow>=12.2.0",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
-    "torch==2.12.0.dev20260324+cu128",
-    "torchvision==0.26.0.dev20260324+cu128",
+    # Floating ranges on the cu128 nightly index instead of exact dev-wheel pins.
+    # Exact pins like `torch==2.12.0.dev20260324+cu128` rot within ~weeks because
+    # PyTorch rotates nightly wheels off the index, leaving `uv lock` / `uv sync`
+    # unsatisfiable for anyone who has not yet fetched that exact wheel.
+    # The CUDA build (cu128) is selected by `[tool.uv.sources]` routing to the
+    # cu128 index below, so it does not need to appear in the requirement string.
+    "torch>=2.12.0.dev,<2.13",
+    "torchvision>=0.27.0.dev,<0.28",
     "transformers>=5.3.0",
     "urllib3>=2.7.0",
 ]
@@ -35,12 +43,13 @@ packages = ["src/ratemyhuman"]
 [tool.uv]
 prerelease = "allow"
 index-strategy = "unsafe-best-match"
-# Overriding facenet-pytorch 2.6.0's strict pins (unmaintained; MTCNN works fine with newer deps)
+# Overriding facenet-pytorch 2.6.0's strict pins (unmaintained; MTCNN works fine with newer deps).
+# Keep these in lockstep with [project.dependencies] above.
 override-dependencies = [
     "numpy>=2.1",
-    "pillow>=12.1.1",
-    "torch==2.12.0.dev20260324+cu128",
-    "torchvision==0.26.0.dev20260324+cu128",
+    "pillow>=12.2.0",
+    "torch>=2.12.0.dev,<2.13",
+    "torchvision>=0.27.0.dev,<0.28",
 ]
 
 [[tool.uv.index]]
