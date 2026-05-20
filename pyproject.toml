@@ -16,6 +16,7 @@ dependencies = [
     # pillow >=12.2.0 patches CVE-2025-48379 (fixed 11.3.0) and CVE-2026-25990 (fixed 12.1.1);
     # the >=12.2.0 floor matches the ecosystem-wide bump and also clears CVE-2026-42311.
     "pillow>=12.2.0",
+    "pytest>=9.0.3",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
     # Floating ranges on the cu128 nightly index instead of exact dev-wheel pins.
