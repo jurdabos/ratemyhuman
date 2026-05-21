@@ -5,8 +5,9 @@ description = "Facial valence detection from human face images"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "Torda Balázs"}]
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
+    "acidbase @ git+https://github.com/jurdabos/acidbase.git",
     "click>=8.1",
     "facenet-pytorch>=2.6.0",
     "gradio>=6.10.0",
@@ -37,6 +38,10 @@ ratemyhuman = "ratemyhuman.cli:main"
 [build-system]
 requires = ["hatchling>=1,<2"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# Required for the `acidbase @ git+https://...` direct reference in dependencies.
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ratemyhuman"]
