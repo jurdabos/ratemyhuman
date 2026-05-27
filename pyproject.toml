@@ -12,6 +12,7 @@ dependencies = [
     "facenet-pytorch>=2.6.0",
     "gradio>=6.10.0",
     "gradio-client>=2.4.0",
+    "idna>=3.15",
     "matplotlib>=3.10.8",
     "numpy>=2.1",
     # pillow >=12.2.0 patches CVE-2025-48379 (fixed 11.3.0) and CVE-2026-25990 (fixed 12.1.1);
