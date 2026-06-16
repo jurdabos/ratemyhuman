@@ -28,6 +28,7 @@ dependencies = [
     # unsatisfiable for anyone who has not yet fetched that exact wheel.
     # The CUDA build (cu128) is selected by `[tool.uv.sources]` routing to the
     # cu128 index below, so it does not need to appear in the requirement string.
+    "starlette>=1.3.1",
     "torch>=2.12.0.dev,<2.13",
     "torchvision>=0.27.0.dev,<0.28",
     "transformers>=5.3.0",
