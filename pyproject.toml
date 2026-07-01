@@ -20,6 +20,7 @@ dependencies = [
     "pillow>=12.2.0",
     "pytest>=9.0.3",
     "python-multipart>=0.0.27",
+    "requests>=2.33.0",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
     # Floating ranges on the cu128 nightly index instead of exact dev-wheel pins.
