@@ -1208,7 +1208,7 @@ requires-dist = [
     { name = "idna", specifier = ">=3.15" },
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "numpy", specifier = ">=2.1" },
-    { name = "pillow", specifier = ">=12.2.0" },
+    { name = "pillow", specifier = ">=12.3.0" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "python-multipart", specifier = ">=0.0.27" },
     { name = "requests", specifier = ">=2.33.0" },
