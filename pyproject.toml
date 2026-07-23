@@ -57,7 +57,7 @@ index-strategy = "unsafe-best-match"
 # Keep these in lockstep with [project.dependencies] above.
 override-dependencies = [
     "numpy>=2.1",
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "torch>=2.12.0.dev,<2.13",
     "torchvision>=0.27.0.dev,<0.28",
 ]
