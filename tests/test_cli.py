@@ -1,21 +1,26 @@
-"""Tests for the CLI module."""
+"""
+Tests for the CLI module.
+
+Covers the ratemyhuman Click group plus consumer-side contract tests for
+the shared push-workflow helpers that live in acidbase.push.
+"""
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.testing import CliRunner
-from PIL import Image
-
-from ratemyhuman.cli import (
+from acidbase.push import (
     _auto_commit_message,
     _find_dvc_changed_outs,
     _find_untracked_for_dvc,
-    _get_project_root,
     _has_changes,
     _hooks_modified_files,
-    cli,
     DEFAULT_SIZE_THRESHOLD,
+    get_project_root,
 )
+from click.testing import CliRunner
+from PIL import Image
+
+from ratemyhuman.cli import cli
 
 
 class TestHooksModifiedFiles:
@@ -72,34 +77,33 @@ class TestAutoCommitMessage:
 
 class TestGetProjectRoot:
     """
-    Tests _get_project_root.
+    Tests the get_project_root helper.
     """
 
-    def test_finds_root_with_both_markers(self, tmp_path, monkeypatch):
+    def test_finds_root_from_subdir(self, tmp_path, monkeypatch):
         """
-        Verifies detection with pyproject.toml and .dvc/.
+        Verifies the root is located by walking up from a subdirectory.
         """
         (tmp_path / "pyproject.toml").touch()
-        (tmp_path / ".dvc").mkdir()
         sub = tmp_path / "src"
         sub.mkdir()
         monkeypatch.chdir(sub)
-        assert _get_project_root() == tmp_path
+        assert get_project_root() == tmp_path
 
-    def test_finds_root_with_pyproject_only(self, tmp_path, monkeypatch):
+    def test_finds_root_in_cwd(self, tmp_path, monkeypatch):
         """
-        Verifies fallback to pyproject.toml without .dvc.
+        Verifies detection when pyproject.toml sits in the current directory.
         """
         (tmp_path / "pyproject.toml").touch()
         monkeypatch.chdir(tmp_path)
-        assert _get_project_root() == tmp_path
+        assert get_project_root() == tmp_path
 
     def test_fallback_to_cwd(self, tmp_path, monkeypatch):
         """
-        Verifies fallback to cwd when no markers exist.
+        Verifies fallback to cwd when no pyproject.toml exists.
         """
         monkeypatch.chdir(tmp_path)
-        assert _get_project_root() == tmp_path
+        assert get_project_root() == tmp_path
 
 
 class TestHasChanges:
@@ -107,7 +111,7 @@ class TestHasChanges:
     Tests _has_changes.
     """
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_clean(self, mock_run, tmp_path):
         """
         Verifies False for a clean working tree.
@@ -115,7 +119,7 @@ class TestHasChanges:
         mock_run.return_value = MagicMock(stdout="")
         assert _has_changes(tmp_path) is False
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_dirty(self, mock_run, tmp_path):
         """
         Verifies True for a dirty working tree.
@@ -129,7 +133,7 @@ class TestFindUntrackedForDvc:
     Tests _find_untracked_for_dvc.
     """
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_finds_binary_by_extension(self, mock_run, tmp_path):
         """
         Verifies detection of untracked binary files by extension.
@@ -139,7 +143,7 @@ class TestFindUntrackedForDvc:
         result = _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD)
         assert "model.pt" in result
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_finds_large_unknown_file(self, mock_run, tmp_path):
         """
         Verifies detection of files exceeding the size threshold.
@@ -149,7 +153,7 @@ class TestFindUntrackedForDvc:
         result = _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD)
         assert "bigfile.dat" in result
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_skips_code_files(self, mock_run, tmp_path):
         """
         Verifies code/config files are not flagged for DVC.
@@ -158,7 +162,7 @@ class TestFindUntrackedForDvc:
         (tmp_path / "script.py").write_text("x")
         assert _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_skips_dvc_pointers(self, mock_run, tmp_path):
         """
         Verifies .dvc pointer files are skipped.
@@ -167,7 +171,7 @@ class TestFindUntrackedForDvc:
         (tmp_path / "data.csv.dvc").write_text("md5: abc")
         assert _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_skips_gitignore(self, mock_run, tmp_path):
         """
         Verifies .gitignore files are skipped.
@@ -176,7 +180,7 @@ class TestFindUntrackedForDvc:
         (tmp_path / ".gitignore").write_text("*.log")
         assert _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_skips_tracked_files(self, mock_run, tmp_path):
         """
         Verifies that tracked (non-??) files are ignored.
@@ -185,7 +189,7 @@ class TestFindUntrackedForDvc:
         (tmp_path / "model.pt").write_bytes(b"x")
         assert _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_skips_directories(self, mock_run, tmp_path):
         """
         Verifies directories are skipped.
@@ -194,7 +198,7 @@ class TestFindUntrackedForDvc:
         (tmp_path / "data").mkdir()
         assert _find_untracked_for_dvc(tmp_path, DEFAULT_SIZE_THRESHOLD) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_empty_status(self, mock_run, tmp_path):
         """
         Verifies empty result when no untracked files exist.
@@ -208,7 +212,7 @@ class TestFindDvcChangedOuts:
     Tests _find_dvc_changed_outs.
     """
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_finds_modified(self, mock_run, tmp_path):
         """
         Verifies detection of modified DVC outputs.
@@ -219,7 +223,7 @@ class TestFindDvcChangedOuts:
         result = _find_dvc_changed_outs(tmp_path)
         assert "file.png" in result
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_no_changes_empty(self, mock_run, tmp_path):
         """
         Verifies empty result for empty dvc status.
@@ -227,7 +231,7 @@ class TestFindDvcChangedOuts:
         mock_run.return_value = MagicMock(stdout="")
         assert _find_dvc_changed_outs(tmp_path) == []
 
-    @patch("ratemyhuman.cli._run")
+    @patch("acidbase.push._run")
     def test_no_changes_explicit(self, mock_run, tmp_path):
         """
         Verifies empty result when 'no changes' is reported.
@@ -370,11 +374,12 @@ class TestPushCommand:
     Tests the push CLI command.
     """
 
-    @patch("ratemyhuman.cli._get_project_root")
-    @patch("ratemyhuman.cli._find_untracked_for_dvc")
-    @patch("ratemyhuman.cli._find_dvc_changed_outs", return_value=[])
-    @patch("ratemyhuman.cli._run")
-    def test_push_dry_run(self, mock_run, mock_changed, mock_untracked, mock_root, tmp_path):
+    @patch("acidbase.push.get_project_root")
+    @patch("acidbase.push.has_dvc", return_value=True)
+    @patch("acidbase.push._find_untracked_for_dvc")
+    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._run")
+    def test_push_dry_run(self, mock_run, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path):
         """
         Verifies dry-run mode previews without making changes.
         """
@@ -387,11 +392,12 @@ class TestPushCommand:
         assert result.exit_code == 0
         assert "dry run" in result.output.lower()
 
-    @patch("ratemyhuman.cli._get_project_root")
-    @patch("ratemyhuman.cli._find_untracked_for_dvc", return_value=[])
-    @patch("ratemyhuman.cli._find_dvc_changed_outs", return_value=[])
-    @patch("ratemyhuman.cli._run")
-    def test_push_clean_tree(self, mock_run, mock_changed, mock_untracked, mock_root, tmp_path):
+    @patch("acidbase.push.get_project_root")
+    @patch("acidbase.push.has_dvc", return_value=True)
+    @patch("acidbase.push._find_untracked_for_dvc", return_value=[])
+    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._run")
+    def test_push_clean_tree(self, mock_run, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path):
         """
         Verifies early exit when the working tree is clean.
         """
@@ -402,12 +408,15 @@ class TestPushCommand:
         assert result.exit_code == 0
         assert "clean" in result.output.lower()
 
-    @patch("ratemyhuman.cli._get_project_root")
-    @patch("ratemyhuman.cli._find_untracked_for_dvc", return_value=[])
-    @patch("ratemyhuman.cli._find_dvc_changed_outs", return_value=[])
-    @patch("ratemyhuman.cli._has_changes", return_value=False)
-    @patch("ratemyhuman.cli._run")
-    def test_push_full_flow(self, mock_run, mock_has_changes, mock_changed, mock_untracked, mock_root, tmp_path):
+    @patch("acidbase.push.get_project_root")
+    @patch("acidbase.push.has_dvc", return_value=True)
+    @patch("acidbase.push._find_untracked_for_dvc", return_value=[])
+    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._has_changes", return_value=False)
+    @patch("acidbase.push._run")
+    def test_push_full_flow(
+        self, mock_run, mock_has_changes, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path
+    ):
         """
         Verifies the full push flow with commit and push.
         """

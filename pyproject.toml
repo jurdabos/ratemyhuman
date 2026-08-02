@@ -23,6 +23,11 @@ dependencies = [
     "requests>=2.33.0",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
+    # setuptools >=83.0.0 patches CVE-2026-59890. setuptools is only present as a
+    # transitive dependency (via the torch nightly), whose wheel metadata caps
+    # setuptools below 83; the same floor is mirrored in [tool.uv]
+    # override-dependencies below to defeat that cap (keep the two in lockstep).
+    "setuptools>=83.0.0",
     # Floating ranges on the cu128 nightly index instead of exact dev-wheel pins.
     # Exact pins like `torch==2.12.0.dev20260324+cu128` rot within ~weeks because
     # PyTorch rotates nightly wheels off the index, leaving `uv lock` / `uv sync`
@@ -58,6 +63,10 @@ index-strategy = "unsafe-best-match"
 override-dependencies = [
     "numpy>=2.1",
     "pillow>=12.3.0",
+    # setuptools floor defeats the torch nightly's own setuptools cap (< 83), which
+    # otherwise blocks the CVE-2026-59890 fix. Kept in lockstep with the
+    # [project.dependencies] setuptools floor above.
+    "setuptools>=83.0.0",
     "torch>=2.12.0.dev,<2.13",
     "torchvision>=0.27.0.dev,<0.28",
 ]
