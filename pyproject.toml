@@ -23,20 +23,21 @@ dependencies = [
     "requests>=2.33.0",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
-    # setuptools >=83.0.0 patches CVE-2026-59890. setuptools is only present as a
-    # transitive dependency (via the torch nightly), whose wheel metadata caps
-    # setuptools below 83; the same floor is mirrored in [tool.uv]
-    # override-dependencies below to defeat that cap (keep the two in lockstep).
+    # setuptools >=83.0.0 patches CVE-2026-59890. setuptools is present as a
+    # transitive dependency (via torch); the same floor is mirrored in [tool.uv]
+    # override-dependencies below to defeat any transitive cap (keep the two in
+    # lockstep).
     "setuptools>=83.0.0",
-    # Floating ranges on the cu128 nightly index instead of exact dev-wheel pins.
-    # Exact pins like `torch==2.12.0.dev20260324+cu128` rot within ~weeks because
-    # PyTorch rotates nightly wheels off the index, leaving `uv lock` / `uv sync`
-    # unsatisfiable for anyone who has not yet fetched that exact wheel.
-    # The CUDA build (cu128) is selected by `[tool.uv.sources]` routing to the
-    # cu128 index below, so it does not need to appear in the requirement string.
     "starlette>=1.3.1",
-    "torch>=2.12.0.dev,<2.13",
-    "torchvision>=0.27.0.dev,<0.28",
+    # torch >=2.13.0 patches CVE-2025-3000. Stable 2.13.0+cu130 wheels replaced the
+    # former cu128 nightlies (the nightly channel was only needed before Blackwell
+    # support landed in stable; cu128 stable stops at torch 2.11.0). The CUDA build
+    # (cu130) is selected by `[tool.uv.sources]` routing to the cu130 index below,
+    # so it does not need to appear in the requirement string. torchvision 0.28.x
+    # is the lockstep release for torch 2.13.x. Both floors are mirrored in
+    # override-dependencies below.
+    "torch>=2.13.0",
+    "torchvision>=0.28.0",
     "transformers>=5.5.0",
     "urllib3>=2.7.0",
 ]
@@ -57,30 +58,35 @@ packages = ["src/ratemyhuman"]
 
 [tool.uv]
 prerelease = "allow"
-index-strategy = "unsafe-best-match"
 # Overriding facenet-pytorch 2.6.0's strict pins (unmaintained; MTCNN works fine with newer deps).
 # Keep these in lockstep with [project.dependencies] above.
 override-dependencies = [
     "numpy>=2.1",
     "pillow>=12.3.0",
-    # setuptools floor defeats the torch nightly's own setuptools cap (< 83), which
-    # otherwise blocks the CVE-2026-59890 fix. Kept in lockstep with the
-    # [project.dependencies] setuptools floor above.
+    # setuptools floor defeats any transitive setuptools cap (the former torch cu128
+    # nightlies capped it below 83), which otherwise blocks the CVE-2026-59890 fix.
+    # Kept in lockstep with the [project.dependencies] setuptools floor above.
     "setuptools>=83.0.0",
-    "torch>=2.12.0.dev,<2.13",
-    "torchvision>=0.27.0.dev,<0.28",
+    "torch>=2.13.0",
+    "torchvision>=0.28.0",
 ]
 
 [[tool.uv.index]]
 url = "https://pypi.org/simple"
 
+# The index is marked ``explicit`` so uv only queries download.pytorch.org for
+# the packages routed to it via [tool.uv.sources] below. The former setup
+# (nightly cu128 index without ``explicit`` plus
+# ``index-strategy = "unsafe-best-match"``) made uv fan out to the PyTorch
+# index for *every* package.
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/nightly/cu128"
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
+torch = { index = "pytorch-cu130" }
+torchvision = { index = "pytorch-cu130" }
 
 [tool.pytest.ini_options]
 markers = ["slow: marks tests that require GPU and model weights (deselect with '-m \"not slow\"')"]
