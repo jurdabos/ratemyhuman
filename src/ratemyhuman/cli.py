@@ -16,10 +16,11 @@ from pathlib import Path
 
 import click
 
+from acidbase.cli_utils import group
 from acidbase.push import push_command
 
 
-@click.group(context_settings={"max_content_width": shutil.get_terminal_size().columns})
+@group(context_settings={"max_content_width": shutil.get_terminal_size().columns})
 @click.option("-v", "--verbose", is_flag=True, help="Enable debug logging")
 def cli(verbose: bool) -> None:
     """
