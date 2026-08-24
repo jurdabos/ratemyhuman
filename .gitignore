@@ -81,7 +81,6 @@ Thumbs.db
 /backup.log
 analytics/
 checkpoints/
-data/
 datasets/
 logs/
 models/
@@ -112,11 +111,6 @@ docs/_build/
 coverage.xml
 htmlcov/
 nosetests.xml
-simple_test.*
-test*.jpg
-test*.png
-test*.svg
-test_output.*
 *.mo
 *.pot
 webdrivers/
@@ -125,4 +119,3 @@ webdrivers/
 docs/convert_html_to_pdf_with_uteal.txt
 scripts/function_report.txt
 *.gitignore.bak*
-/data

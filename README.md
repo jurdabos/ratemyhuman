@@ -199,15 +199,9 @@ Expected: `110 passed, 3 deselected, 1 warning`. The deselected tests are the GP
 
 The FER-2013 dataset is needed only for `uv run ratemyhuman validate` and `uv run ratemyhuman explore`. The `classify` and `demo` commands work without it (they classify arbitrary uploaded faces, not a labelled split).
 
-**Option A — DVC pull (project maintainers / authorised collaborators):**
+The dataset lives in the repository itself under `data/{train,val,test}/` (~36k PNGs, 60 MB — every image is ≤2 KB, well within GitHub limits). A fresh `git clone` therefore ships it; no extra download step is required.
 
-```bash
-dvc pull
-```
-
-Requires AWS credentials with read access to the project's configured S3 DVC remote. Pulls ~80 MB of PNGs into `data/{train,val,test}/` based on the `.dvc` pointer files already tracked in git.
-
-**Option B — Manual Kaggle download (everyone else):**
+If you ever need to re-fetch the dataset from the original source (for example to extend it), use the manual Kaggle download:
 
 1. Create a Kaggle account at https://www.kaggle.com/ and a new API token at *Account → API → Create New Token* (downloads `kaggle.json`).
 2. Copy `.env.example` to `.env` and populate the placeholders:
@@ -231,8 +225,6 @@ Requires AWS credentials with read access to the project's configured S3 DVC rem
      val/{angry,disgust,fear,happy,neutral,sad,surprise}/*.png
      test/{angry,disgust,fear,happy,neutral,sad,surprise}/*.png
    ```
-
-Either path produces an identical on-disk layout that `explore` and `validate` can consume.
 
 ### Step 7 — First run
 
