@@ -18,6 +18,7 @@ import click
 
 from acidbase.cli_utils import group
 from acidbase.push import push_command
+from acidbase.versioning import bump_command
 
 
 @group(context_settings={"max_content_width": shutil.get_terminal_size().columns})
@@ -33,6 +34,7 @@ def cli(verbose: bool) -> None:
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
 
+cli.add_command(bump_command)
 cli.add_command(push_command)
 
 
