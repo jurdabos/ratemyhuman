@@ -17,8 +17,9 @@ dependencies = [
     "matplotlib>=3.10.8",
     "numpy>=2.1",
     # pillow >=12.2.0 patches CVE-2025-48379 (fixed 11.3.0) and CVE-2026-25990 (fixed 12.1.1);
-    # the >=12.2.0 floor matches the ecosystem-wide bump and also clears CVE-2026-42311.
-    "pillow>=12.3.0",
+    # the >=12.2.0 floor matches the ecosystem-wide bump and also clears CVE-2026-42311;
+    # >=13.0.0 patches CVE-2026-96639. Mirrored in [tool.uv] override-dependencies below.
+    "pillow>=13.0.0",
     "pytest>=9.0.3",
     "python-multipart>=0.0.27",
     "requests>=2.33.0",
@@ -63,7 +64,7 @@ prerelease = "allow"
 # Keep these in lockstep with [project.dependencies] above.
 override-dependencies = [
     "numpy>=2.1",
-    "pillow>=12.3.0",
+    "pillow>=13.0.0",
     # setuptools floor defeats any transitive setuptools cap (the former torch cu128
     # nightlies capped it below 83), which otherwise blocks the CVE-2026-59890 fix.
     # Kept in lockstep with the [project.dependencies] setuptools floor above.
