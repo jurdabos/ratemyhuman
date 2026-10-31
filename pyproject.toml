@@ -10,6 +10,7 @@ dependencies = [
     "acidbase @ git+https://github.com/jurdabos/acidbase.git",
     "anyio>=4.14.2",
     "brotli>=1.2.1",
+    "certifi>=2026.10.18",
     "click>=8.1",
     "facenet-pytorch>=2.6.0",
     "gradio>=6.10.0",
