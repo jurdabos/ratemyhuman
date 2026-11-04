@@ -1,3 +1,5 @@
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
 repos:
   # fast uv-powered helpers maintained by Astral
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -11,3 +13,12 @@ repos:
     rev: v8.24.2              # a known tag; then run `pre-commit autoupdate` to bump
     hooks:
       - id: gitleaks
+
+  - repo: local
+    hooks:
+      # Agents do not co-author: the responsibility stays with the human who signs.
+      - id: no-agent-coauthors
+        name: no agent co-authors
+        entry: '(?i)^co-authored-by:.*(\[bot\]|aider|anthropic|chatgpt|claude|codex|copilot|cursor|devin|gemini|junie|openai|oz-agent|warp|windsurf)'
+        language: pygrep
+        stages: [commit-msg]
