@@ -1,4 +1,5 @@
 """Tests for the ValenceDetector, ValenceResult, and valence mapping layer."""
+
 import glob
 from unittest.mock import MagicMock, patch
 
@@ -8,6 +9,9 @@ import torch
 from PIL import Image
 
 from ratemyhuman.model import (
+    _NEGATIVE_IDX,
+    _NEUTRAL_IDX,
+    _POSITIVE_IDX,
     EMOTION_LABELS,
     EMOTION_PALETTE,
     VALENCE_COLOURS,
@@ -15,9 +19,6 @@ from ratemyhuman.model import (
     VALENCE_ORDER,
     ValenceDetector,
     ValenceResult,
-    _NEGATIVE_IDX,
-    _NEUTRAL_IDX,
-    _POSITIVE_IDX,
     map_label_to_valence,
 )
 
@@ -151,15 +152,18 @@ class TestMapLabelToValence:
     Tests the ground-truth label mapping function.
     """
 
-    @pytest.mark.parametrize("emotion,expected", [
-        ("angry", "Negative"),
-        ("disgust", "Negative"),
-        ("fear", "Negative"),
-        ("sad", "Negative"),
-        ("neutral", "Neutral"),
-        ("happy", "Positive"),
-        ("surprise", "Positive"),
-    ])
+    @pytest.mark.parametrize(
+        "emotion,expected",
+        [
+            ("angry", "Negative"),
+            ("disgust", "Negative"),
+            ("fear", "Negative"),
+            ("sad", "Negative"),
+            ("neutral", "Neutral"),
+            ("happy", "Positive"),
+            ("surprise", "Positive"),
+        ],
+    )
     def test_all_emotions_map_correctly(self, emotion, expected):
         """
         Verifies each emotion maps to the correct valence per §2.3.
@@ -235,8 +239,15 @@ class TestValenceResult:
         result = ValenceResult(
             label="Positive",
             confidence=0.95,
-            emotion_scores={"happy": 0.90, "surprise": 0.05, "angry": 0.01,
-                            "disgust": 0.01, "fear": 0.01, "neutral": 0.01, "sad": 0.01},
+            emotion_scores={
+                "happy": 0.90,
+                "surprise": 0.05,
+                "angry": 0.01,
+                "disgust": 0.01,
+                "fear": 0.01,
+                "neutral": 0.01,
+                "sad": 0.01,
+            },
             valence_scores={"Positive": 0.95, "Negative": 0.04, "Neutral": 0.01},
         )
         text = str(result)
@@ -308,9 +319,11 @@ class TestDetectorPipeline:
         """
         Creates a ValenceDetector with mocked external dependencies.
         """
-        with patch("ratemyhuman.model.MTCNN"), \
-             patch("ratemyhuman.model.ViTImageProcessor"), \
-             patch("ratemyhuman.model.ViTForImageClassification"):
+        with (
+            patch("ratemyhuman.model.MTCNN"),
+            patch("ratemyhuman.model.ViTImageProcessor"),
+            patch("ratemyhuman.model.ViTForImageClassification"),
+        ):
             d = ValenceDetector(device="cpu")
         return d
 
@@ -362,9 +375,7 @@ class TestDetectorPipeline:
         img_path = tmp_path / "face.png"
         Image.new("RGB", (48, 48)).save(img_path)
         detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
-        detector.predict_emotion = MagicMock(
-            return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03])
-        )
+        detector.predict_emotion = MagicMock(return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03]))
         result = detector.classify(img_path)
         assert result.label == "Positive"
         assert result.confidence > 0.9
@@ -391,9 +402,7 @@ class TestDetectorPipeline:
         Verifies classify_array with a PIL image.
         """
         detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
-        detector.predict_emotion = MagicMock(
-            return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03])
-        )
+        detector.predict_emotion = MagicMock(return_value=np.array([0.01, 0.01, 0.01, 0.90, 0.03, 0.01, 0.03]))
         result = detector.classify_array(Image.new("RGB", (224, 224)))
         assert result.label == "Positive"
 
@@ -402,9 +411,7 @@ class TestDetectorPipeline:
         Verifies classify_array with a numpy array.
         """
         detector.detect_face = MagicMock(return_value=np.zeros((224, 224, 3), dtype=np.uint8))
-        detector.predict_emotion = MagicMock(
-            return_value=np.array([0.85, 0.03, 0.03, 0.02, 0.02, 0.03, 0.02])
-        )
+        detector.predict_emotion = MagicMock(return_value=np.array([0.85, 0.03, 0.03, 0.02, 0.02, 0.03, 0.02]))
         result = detector.classify_array(np.zeros((48, 48, 3), dtype=np.uint8))
         assert result.label == "Negative"
 

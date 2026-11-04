@@ -4,17 +4,19 @@ Explores and validates the FER-2013 dataset.
 Produces class/valence distribution stats, checks image integrity,
 and generates visualisation plots saved to the project's docs/ folder.
 """
+
 import logging
 from collections import Counter
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 from PIL import Image
 
 from ratemyhuman.model import (
     EMOTION_LABELS as EMOTION_CLASSES,
+)
+from ratemyhuman.model import (
     EMOTION_PALETTE,
     VALENCE_COLOURS,
     VALENCE_MAP,
@@ -169,8 +171,7 @@ def plot_sample_grid(data_dir: Path, output_dir: Path, split: str = "train", n_p
     Useful as a sanity check that the on-disk layout matches the assumed
     ``data/<split>/<emotion>/*.png`` convention.
     """
-    fig, axes = plt.subplots(len(EMOTION_CLASSES), n_per_class,
-                             figsize=(n_per_class * 1.5, len(EMOTION_CLASSES) * 1.8))
+    fig, axes = plt.subplots(len(EMOTION_CLASSES), n_per_class, figsize=(n_per_class * 1.5, len(EMOTION_CLASSES) * 1.8))
     fig.suptitle(f"FER-2013 — Sample Images ({split})", fontsize=14, fontweight="bold")
     for row, emotion in enumerate(EMOTION_CLASSES):
         emotion_dir = data_dir / split / emotion
@@ -202,9 +203,9 @@ def print_summary(counts: dict[str, dict[str, int]], valence_counts: dict[str, d
         if split not in counts:
             continue
         total = sum(counts[split].values())
-        logger.info(f"\n{'='*50}")
+        logger.info(f"\n{'=' * 50}")
         logger.info(f"Split: {split.upper()} ({total:,} images)")
-        logger.info(f"{'='*50}")
+        logger.info(f"{'=' * 50}")
         logger.info("  Emotion breakdown:")
         for emotion in EMOTION_CLASSES:
             n = counts[split].get(emotion, 0)

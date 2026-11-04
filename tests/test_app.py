@@ -1,4 +1,5 @@
 """Tests for the Gradio web UI (app.py)."""
+
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -23,6 +24,7 @@ class TestPredict:
         Resets the module-level detector singleton between tests.
         """
         import ratemyhuman.app as app_mod
+
         app_mod._detector = None
         yield
         app_mod._detector = None
@@ -35,8 +37,13 @@ class TestPredict:
             label=label,
             confidence=confidence,
             emotion_scores={
-                "angry": 0.01, "disgust": 0.01, "fear": 0.01,
-                "happy": 0.90, "neutral": 0.03, "sad": 0.01, "surprise": 0.03,
+                "angry": 0.01,
+                "disgust": 0.01,
+                "fear": 0.01,
+                "happy": 0.90,
+                "neutral": 0.03,
+                "sad": 0.01,
+                "surprise": 0.03,
             },
             valence_scores={"Negative": 0.04, "Neutral": 0.03, "Positive": 0.93},
         )
@@ -132,5 +139,6 @@ class TestBuildApp:
         Verifies that build_app() returns a Gradio Blocks instance.
         """
         import gradio as gr
+
         app = build_app()
         assert isinstance(app, gr.Blocks)

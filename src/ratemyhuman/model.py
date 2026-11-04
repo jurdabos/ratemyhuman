@@ -4,6 +4,7 @@ Facial valence detection using a pretrained ViT emotion model.
 Implements the three-stage pipeline described in concept note §4.3:
 MTCNN face detection → ViT 7-class emotion inference → 3-class valence mapping.
 """
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,7 +22,13 @@ MODEL_ID = "trpakov/vit-face-expression"
 
 # Label order as defined in the model's config.json (id2label)
 EMOTION_LABELS: list[str] = [
-    "angry", "disgust", "fear", "happy", "neutral", "sad", "surprise",
+    "angry",
+    "disgust",
+    "fear",
+    "happy",
+    "neutral",
+    "sad",
+    "surprise",
 ]
 
 # Valence mapping per concept note §2.3
@@ -47,14 +54,19 @@ VALENCE_COLOURS: dict[str, str] = {
 
 # Per-emotion colours aligned with EMOTION_LABELS order
 EMOTION_PALETTE: list[str] = [
-    "#A24936", "#A24936", "#A24936", "#DBF4A7",
-    "#7EBCE6", "#A24936", "#DBF4A7",
+    "#A24936",
+    "#A24936",
+    "#A24936",
+    "#DBF4A7",
+    "#7EBCE6",
+    "#A24936",
+    "#DBF4A7",
 ]
 
 # Indices grouped by valence class for probability aggregation
 _NEGATIVE_IDX: list[int] = [0, 1, 2, 5]  # Angry, Disgust, Fear, Sad
-_NEUTRAL_IDX: list[int] = [4]             # Neutral
-_POSITIVE_IDX: list[int] = [3, 6]         # Happy, Surprise
+_NEUTRAL_IDX: list[int] = [4]  # Neutral
+_POSITIVE_IDX: list[int] = [3, 6]  # Happy, Surprise
 
 
 def map_label_to_valence(emotion_label: str) -> str:
@@ -70,10 +82,7 @@ def map_label_to_valence(emotion_label: str) -> str:
     # Normalising to lowercase to match VALENCE_MAP keys
     normalised = emotion_label.strip().lower()
     if normalised not in VALENCE_MAP:
-        raise KeyError(
-            f"Unknown emotion label: {emotion_label!r}. "
-            f"Expected one of: {', '.join(EMOTION_LABELS)}"
-        )
+        raise KeyError(f"Unknown emotion label: {emotion_label!r}. Expected one of: {', '.join(EMOTION_LABELS)}")
     return VALENCE_MAP[normalised]
 
 
@@ -86,6 +95,7 @@ class ValenceResult:
     7-class emotion + 3-class valence score breakdowns produced by the
     :class:`ValenceDetector` pipeline.
     """
+
     label: str
     confidence: float
     emotion_scores: dict[str, float] = field(default_factory=dict)

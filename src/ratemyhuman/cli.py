@@ -4,6 +4,7 @@ Command-line interface for ratemyhuman.
 Provides subcommands for classification, exploration, validation,
 and the ``push`` workflow (shared from :mod:`acidbase.push`).
 """
+
 from __future__ import annotations
 
 import warnings
@@ -15,7 +16,6 @@ import shutil
 from pathlib import Path
 
 import click
-
 from acidbase.cli_utils import group
 from acidbase.push import push_command
 from acidbase.versioning import bump_command
@@ -75,8 +75,8 @@ def classify_cmd(image: str, device: str | None, as_json: bool) -> None:
         )
     else:
         click.echo(result)
-        click.echo(f"  Emotions: {  {k: round(v, 4) for k, v in result.emotion_scores.items()} }")
-        click.echo(f"  Valence:  {  {k: round(v, 4) for k, v in result.valence_scores.items()} }")
+        click.echo(f"  Emotions: { {k: round(v, 4) for k, v in result.emotion_scores.items()} }")
+        click.echo(f"  Valence:  { {k: round(v, 4) for k, v in result.valence_scores.items()} }")
 
 
 # -------------------------------------------------------------------

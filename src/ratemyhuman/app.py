@@ -6,6 +6,7 @@ and receive the 3-class valence prediction with emotion breakdowns.
 Styling follows the project palette (palettes.json) and the layout is
 designed to be screenshot-friendly for the showcase.
 """
+
 import logging
 
 import gradio as gr
@@ -31,10 +32,7 @@ _PALETTE_MUTED = "#5A6470"
 
 # Initial summary shown before any classification has been requested
 _PLACEHOLDER_SUMMARY = (
-    "<div class='rmh-card rmh-card--idle'>"
-    "<h2>Ready</h2>"
-    "<p>Upload a face image (or use your webcam) to begin.</p>"
-    "</div>"
+    "<div class='rmh-card rmh-card--idle'><h2>Ready</h2><p>Upload a face image (or use your webcam) to begin.</p></div>"
 )
 
 
@@ -46,11 +44,7 @@ def _format_status_card(message: str, *, kind: str) -> str:
     or returns no usable prediction.
     """
     icon = {"info": "ℹ", "warning": "⚠", "error": "✕"}.get(kind, "ℹ")
-    return (
-        f"<div class='rmh-card rmh-card--{kind}'>"
-        f"<h2>{icon} {message}</h2>"
-        f"</div>"
-    )
+    return f"<div class='rmh-card rmh-card--{kind}'><h2>{icon} {message}</h2></div>"
 
 
 def _format_result_card(label: str, confidence: float, top_emotion: str, top_emotion_p: float) -> str:
@@ -266,7 +260,8 @@ def build_app() -> gr.Blocks:
             "<div id='rmh-footer'>"
             f"Model: <a href='https://huggingface.co/{MODEL_ID}' target='_blank' rel='noopener'>{MODEL_ID}</a>"
             " · Face detection: "
-            "<a href='https://github.com/timesler/facenet-pytorch' target='_blank' rel='noopener'>facenet-pytorch (MTCNN)</a>"
+            "<a href='https://github.com/timesler/facenet-pytorch' target='_blank' rel='noopener'>"
+            "facenet-pytorch (MTCNN)</a>"
             " · <a href='https://github.com/acidvuca/ratemyhuman' target='_blank' rel='noopener'>Source on GitHub</a>"
             "</div>"
         )

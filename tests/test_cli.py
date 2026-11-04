@@ -6,6 +6,7 @@ shared acidbase.push workflow through this repo's CLI entry point. Unit
 tests for the underlying push helpers live upstream in acidbase
 (tests/test_push.py).
 """
+
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
@@ -50,8 +51,13 @@ class TestClassifyCommand:
         r.label = "Positive"
         r.confidence = 0.95
         r.emotion_scores = {
-            "happy": 0.90, "angry": 0.01, "disgust": 0.01,
-            "fear": 0.01, "neutral": 0.03, "sad": 0.01, "surprise": 0.03,
+            "happy": 0.90,
+            "angry": 0.01,
+            "disgust": 0.01,
+            "fear": 0.01,
+            "neutral": 0.03,
+            "sad": 0.01,
+            "surprise": 0.03,
         }
         r.valence_scores = {"Positive": 0.93, "Negative": 0.04, "Neutral": 0.03}
         r.__str__ = MagicMock(return_value="Valence: Positive (95.0%)")

@@ -40,7 +40,6 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 .env
-.python-version
 .venv/
 ENV/
 env.bak/
@@ -119,3 +118,11 @@ webdrivers/
 docs/convert_html_to_pdf_with_uteal.txt
 scripts/function_report.txt
 *.gitignore.bak*
+
+# --- appended by acidbase scaffold ---
+*.npy
+.env.*
+.serena/
+/.quarto/
+/_site/
+!.env.example

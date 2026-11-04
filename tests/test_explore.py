@@ -1,4 +1,5 @@
 """Tests for the exploration module."""
+
 import logging
 from pathlib import Path
 
@@ -72,9 +73,9 @@ class TestValenceDistribution:
         counts = count_images(sample_data)
         valence = valence_distribution(counts)
         for split in ["train", "test"]:
-            assert valence[split]["Negative"] == 8   # angry+disgust+fear+sad = 4*2
-            assert valence[split]["Neutral"] == 2    # neutral = 1*2
-            assert valence[split]["Positive"] == 4   # happy+surprise = 2*2
+            assert valence[split]["Negative"] == 8  # angry+disgust+fear+sad = 4*2
+            assert valence[split]["Neutral"] == 2  # neutral = 1*2
+            assert valence[split]["Positive"] == 4  # happy+surprise = 2*2
 
 
 class TestCheckIntegrity:

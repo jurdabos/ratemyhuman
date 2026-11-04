@@ -4,6 +4,7 @@ Validates the valence detection pipeline on the FER2013 test set.
 Implements the validation process described in concept note §4.4:
 load dataset → map ground truth → batch inference → compute metrics → plot.
 """
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,7 +16,6 @@ import seaborn as sns
 from PIL import Image
 from sklearn.metrics import (
     accuracy_score,
-    classification_report,
     confusion_matrix,
     f1_score,
     matthews_corrcoef,
@@ -23,7 +23,6 @@ from sklearn.metrics import (
 )
 
 from ratemyhuman.model import (
-    VALENCE_COLOURS,
     VALENCE_ORDER,
     ValenceDetector,
     map_label_to_valence,
@@ -41,6 +40,7 @@ class ValidationReport:
     breakdowns, baselines, and a sample of misclassified items so the
     report can be both summarised and visualised downstream.
     """
+
     accuracy: float
     f1_macro: float
     f1_weighted: float
@@ -61,10 +61,10 @@ class ValidationReport:
         per-class precision/recall/F1, and the raw confusion matrix.
         """
         lines = [
-            f"{'='*60}",
+            f"{'=' * 60}",
             f"Validation Report  ({self.total_images - self.skipped_images} evaluated, "
             f"{self.skipped_images} skipped / {self.total_images} total)",
-            f"{'='*60}",
+            f"{'=' * 60}",
             f"  Accuracy:          {self.accuracy:.4f}",
             f"  F1 (macro):        {self.f1_macro:.4f}",
             f"  F1 (weighted):     {self.f1_weighted:.4f}",
@@ -82,7 +82,7 @@ class ValidationReport:
                 f"F1={m.get('f1', 0):.3f}  "
                 f"N={m.get('support', 0):.0f}"
             )
-        lines.append(f"\n  Confusion matrix (rows=true, cols=pred):")
+        lines.append("\n  Confusion matrix (rows=true, cols=pred):")
         lines.append(f"  {'':>10s}  " + "  ".join(f"{c:>8s}" for c in VALENCE_ORDER))
         for i, cls in enumerate(VALENCE_ORDER):
             row = "  ".join(f"{self.confusion_matrix[i, j]:>8d}" for j in range(len(VALENCE_ORDER)))
@@ -155,13 +155,15 @@ class ValidationRunner:
                 y_true.append(true_valence)
                 y_pred.append(result.label)
                 if result.label != true_valence and len(misclassified) < max_misclassified:
-                    misclassified.append({
-                        "path": str(img_path),
-                        "true": true_valence,
-                        "pred": result.label,
-                        "confidence": result.confidence,
-                        "emotion_scores": result.emotion_scores,
-                    })
+                    misclassified.append(
+                        {
+                            "path": str(img_path),
+                            "true": true_valence,
+                            "pred": result.label,
+                            "confidence": result.confidence,
+                            "emotion_scores": result.emotion_scores,
+                        }
+                    )
             except (ValueError, Exception) as exc:
                 skipped += 1
                 logger.debug(f"Skipped {img_path.name}: {exc}")
@@ -189,7 +191,10 @@ class ValidationRunner:
         mcc = matthews_corrcoef(y_true, y_pred)
         cm = confusion_matrix(y_true, y_pred, labels=labels)
         prec, rec, f1, sup = precision_recall_fscore_support(
-            y_true, y_pred, labels=labels, zero_division=0,
+            y_true,
+            y_pred,
+            labels=labels,
+            zero_division=0,
         )
         per_class: dict[str, dict[str, float]] = {}
         for i, cls in enumerate(labels):
@@ -203,6 +208,7 @@ class ValidationRunner:
         n_classes = len(labels)
         baseline_random = 1.0 / n_classes
         from collections import Counter
+
         counts = Counter(y_true)
         majority_count = max(counts.values()) if counts else 0
         baseline_majority = majority_count / len(y_true) if y_true else 0.0
@@ -233,12 +239,15 @@ class ValidationRunner:
         # Normalising by row (true class) for percentage display
         # Guarding against empty true-class rows (e.g. tiny test fixtures)
         row_sums = cm.sum(axis=1, keepdims=True)
-        cm_norm = np.divide(
-            cm.astype(float),
-            row_sums,
-            out=np.zeros(cm.shape, dtype=float),
-            where=row_sums != 0,
-        ) * 100
+        cm_norm = (
+            np.divide(
+                cm.astype(float),
+                row_sums,
+                out=np.zeros(cm.shape, dtype=float),
+                where=row_sums != 0,
+            )
+            * 100
+        )
         sns.heatmap(
             cm_norm,
             annot=True,
@@ -253,16 +262,20 @@ class ValidationRunner:
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 ax.text(
-                    j + 0.5, i + 0.72,
+                    j + 0.5,
+                    i + 0.72,
                     f"(n={cm[i, j]})",
-                    ha="center", va="center", fontsize=8, color="gray",
+                    ha="center",
+                    va="center",
+                    fontsize=8,
+                    color="gray",
                 )
         ax.set_xlabel("Predicted valence", fontsize=12)
         ax.set_ylabel("True valence", fontsize=12)
         ax.set_title(
-            f"Confusion Matrix — Accuracy: {report.accuracy:.1%}, "
-            f"F1 (macro): {report.f1_macro:.3f}",
-            fontsize=13, fontweight="bold",
+            f"Confusion Matrix — Accuracy: {report.accuracy:.1%}, F1 (macro): {report.f1_macro:.3f}",
+            fontsize=13,
+            fontweight="bold",
         )
         plt.tight_layout()
         out = output_dir / "confusion_matrix.png"
@@ -304,7 +317,8 @@ class ValidationRunner:
                 colour = "#A24936" if s["pred"] != s["true"] else "#16697A"
                 ax.set_title(
                     f"T: {s['true']}\nP: {s['pred']} ({s['confidence']:.0%})",
-                    fontsize=8, color=colour,
+                    fontsize=8,
+                    color=colour,
                 )
         plt.tight_layout()
         out = output_dir / "misclassified_samples.png"
@@ -326,6 +340,7 @@ def run_validation(
     prints the report, and saves plots.
     """
     from ratemyhuman.model import ValenceDetector
+
     root = Path(__file__).resolve().parent
     for parent in [root, *root.parents]:
         if (parent / "pyproject.toml").exists():

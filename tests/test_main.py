@@ -1,4 +1,5 @@
 """Smoke test for the legacy ratemyhuman.main entry point."""
+
 from ratemyhuman.main import main
 
 
