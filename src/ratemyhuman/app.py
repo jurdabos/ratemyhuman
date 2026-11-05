@@ -3,8 +3,8 @@ Gradio web UI for the facial valence detection demo.
 
 Provides an interactive showcase where users upload a face image
 and receive the 3-class valence prediction with emotion breakdowns.
-Styling follows the project palette (palettes.json) and the layout is
-designed to be screenshot-friendly for the showcase.
+Styling follows the ACIDVUCA brand and the layout is designed to be
+screenshot-friendly for the showcase.
 """
 
 import logging
@@ -13,6 +13,7 @@ import gradio as gr
 import numpy as np
 from PIL import Image
 
+from ratemyhuman.acidvuca_brand import FONT_FAMILY, ROLES
 from ratemyhuman.model import (
     MODEL_ID,
     VALENCE_COLOURS,
@@ -23,11 +24,11 @@ logger = logging.getLogger(__name__)
 # Lazy-loaded singleton so the model is only loaded once per process
 _detector: ValenceDetector | None = None
 
-# Project palette (palettes.json) — exposed as constants for readability
-_PALETTE_TEAL = "#16697A"
-_PALETTE_RED = "#A24936"
-_PALETTE_BLUE = "#7EBCE6"
-_PALETTE_PEACH = "#E6BEAE"
+# Brand roles under local names, for readability
+_PALETTE_TEAL = ROLES["primary"]
+_PALETTE_RED = ROLES["alert"]
+_PALETTE_BLUE = ROLES["info"]
+_PALETTE_PEACH = ROLES["neutral"]
 _PALETTE_MUTED = "#5A6470"
 
 # Initial summary shown before any classification has been requested
@@ -136,7 +137,7 @@ THEME = gr.themes.Soft(
     neutral_hue="slate",
     font=[
         gr.themes.GoogleFont("Inter"),
-        "Lucida Sans Unicode",
+        FONT_FAMILY,
         "system-ui",
         "sans-serif",
     ],

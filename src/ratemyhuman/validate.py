@@ -22,6 +22,7 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
 )
 
+from ratemyhuman.acidvuca_brand import ROLES
 from ratemyhuman.model import (
     VALENCE_ORDER,
     ValenceDetector,
@@ -314,7 +315,7 @@ class ValidationRunner:
                 s = samples[idx]
                 img = Image.open(s["path"]).convert("RGB")
                 ax.imshow(np.array(img))
-                colour = "#A24936" if s["pred"] != s["true"] else "#16697A"
+                colour = ROLES["alert"] if s["pred"] != s["true"] else ROLES["primary"]
                 ax.set_title(
                     f"T: {s['true']}\nP: {s['pred']} ({s['confidence']:.0%})",
                     fontsize=8,

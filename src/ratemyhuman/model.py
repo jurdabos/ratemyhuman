@@ -15,6 +15,8 @@ from facenet_pytorch import MTCNN
 from PIL import Image
 from transformers import ViTForImageClassification, ViTImageProcessor
 
+from ratemyhuman.acidvuca_brand import ROLES
+
 logger = logging.getLogger(__name__)
 
 # HuggingFace model identifier for the pretrained ViT fine-tuned on FER2013
@@ -45,22 +47,22 @@ VALENCE_MAP: dict[str, str] = {
 # Canonical valence class order (used in validation, plots, etc.)
 VALENCE_ORDER: list[str] = ["Negative", "Neutral", "Positive"]
 
-# Colours per valence class — project palette (see palettes.json)
+# Colours per valence class, by brand role
 VALENCE_COLOURS: dict[str, str] = {
-    "Negative": "#A24936",
-    "Neutral": "#7EBCE6",
-    "Positive": "#DBF4A7",
+    "Negative": ROLES["alert"],
+    "Neutral": ROLES["info"],
+    "Positive": ROLES["success"],
 }
 
 # Per-emotion colours aligned with EMOTION_LABELS order
 EMOTION_PALETTE: list[str] = [
-    "#A24936",
-    "#A24936",
-    "#A24936",
-    "#DBF4A7",
-    "#7EBCE6",
-    "#A24936",
-    "#DBF4A7",
+    VALENCE_COLOURS["Negative"],
+    VALENCE_COLOURS["Negative"],
+    VALENCE_COLOURS["Negative"],
+    VALENCE_COLOURS["Positive"],
+    VALENCE_COLOURS["Neutral"],
+    VALENCE_COLOURS["Negative"],
+    VALENCE_COLOURS["Positive"],
 ]
 
 # Indices grouped by valence class for probability aggregation
