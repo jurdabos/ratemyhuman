@@ -22,7 +22,7 @@ overrides = [
 [[package]]
 name = "acidbase"
 version = "0.2.0"
-source = { git = "https://github.com/jurdabos/acidbase.git#6e89a6c22697d5d7e8b29444a15d2a236869ed4b" }
+source = { git = "https://github.com/jurdabos/acidbase.git#b467084653d95b912e267f7ff61448c1ade96f51" }
 dependencies = [
     { name = "click" },
     { name = "keyring" },
