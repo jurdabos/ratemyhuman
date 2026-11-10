@@ -155,17 +155,13 @@ class TestPushCommand:
     """
 
     @patch("acidbase.push.get_project_root")
-    @patch("acidbase.push.has_dvc", return_value=True)
-    @patch("acidbase.push._find_untracked_for_dvc")
-    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._count_unpushed", return_value=0)
     @patch("acidbase.push._run")
-    def test_push_dry_run(self, mock_run, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path):
+    def test_push_dry_run(self, mock_run, mock_unpushed, mock_root, tmp_path):
         """
         Verifies dry-run mode previews without making changes.
         """
         mock_root.return_value = tmp_path
-        (tmp_path / "model.pt").write_bytes(b"x" * 1000)
-        mock_untracked.return_value = ["model.pt"]
         mock_run.return_value = MagicMock(stdout="?? model.pt\n")
         runner = CliRunner()
         result = runner.invoke(cli, ["push", "--dry-run"])
@@ -173,11 +169,9 @@ class TestPushCommand:
         assert "dry run" in result.output.lower()
 
     @patch("acidbase.push.get_project_root")
-    @patch("acidbase.push.has_dvc", return_value=True)
-    @patch("acidbase.push._find_untracked_for_dvc", return_value=[])
-    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._count_unpushed", return_value=0)
     @patch("acidbase.push._run")
-    def test_push_clean_tree(self, mock_run, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path):
+    def test_push_clean_tree(self, mock_run, mock_unpushed, mock_root, tmp_path):
         """
         Verifies early exit when the working tree is clean.
         """
@@ -189,14 +183,10 @@ class TestPushCommand:
         assert "clean" in result.output.lower()
 
     @patch("acidbase.push.get_project_root")
-    @patch("acidbase.push.has_dvc", return_value=True)
-    @patch("acidbase.push._find_untracked_for_dvc", return_value=[])
-    @patch("acidbase.push._find_dvc_changed_outs", return_value=[])
+    @patch("acidbase.push._count_unpushed", return_value=0)
     @patch("acidbase.push._has_changes", return_value=False)
     @patch("acidbase.push._run")
-    def test_push_full_flow(
-        self, mock_run, mock_has_changes, mock_changed, mock_untracked, mock_has_dvc, mock_root, tmp_path
-    ):
+    def test_push_full_flow(self, mock_run, mock_has_changes, mock_unpushed, mock_root, tmp_path):
         """
         Verifies the full push flow with commit and push.
         """

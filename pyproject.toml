@@ -29,11 +29,11 @@ dependencies = [
     "requests>=2.33.0",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
-    # setuptools >=83.0.0 patches CVE-2026-59890. setuptools is present as a
-    # transitive dependency (via torch); the same floor is mirrored in [tool.uv]
-    # override-dependencies below to defeat any transitive cap (keep the two in
-    # lockstep).
-    "setuptools>=83.0.0",
+    # setuptools >=83.0.0 patches CVE-2026-59890; >=84.1.0 patches GHSA-xmj3-9gf7-h52w.
+    # setuptools is present as a transitive dependency (via torch); the same floor is
+    # mirrored in [tool.uv] override-dependencies below to defeat any transitive cap
+    # (keep the two in lockstep).
+    "setuptools>=84.1.0",
     "starlette>=1.3.1",
     # torch >=2.13.0 patches CVE-2025-3000. Stable 2.13.0+cu130 wheels replaced the
     # former cu128 nightlies (the nightly channel was only needed before Blackwell
@@ -72,7 +72,7 @@ override-dependencies = [
     # setuptools floor defeats any transitive setuptools cap (the former torch cu128
     # nightlies capped it below 83), which otherwise blocks the CVE-2026-59890 fix.
     # Kept in lockstep with the [project.dependencies] setuptools floor above.
-    "setuptools>=83.0.0",
+    "setuptools>=84.1.0",
     "torch>=2.13.0",
     "torchvision>=0.28.0",
 ]
