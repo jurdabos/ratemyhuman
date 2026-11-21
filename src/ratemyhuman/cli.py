@@ -16,6 +16,7 @@ import shutil
 from pathlib import Path
 
 import click
+from acidbase.clean import clean_command
 from acidbase.cli_utils import group
 from acidbase.push import push_command
 from acidbase.versioning import bump_command
@@ -35,6 +36,7 @@ def cli(verbose: bool) -> None:
 
 
 cli.add_command(bump_command)
+cli.add_command(clean_command)
 cli.add_command(push_command)
 
 
