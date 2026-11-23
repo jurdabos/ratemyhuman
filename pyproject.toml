@@ -7,7 +7,7 @@ license = {text = "MIT"}
 authors = [{name = "Torda Balázs"}]
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "acidbase @ git+https://github.com/jurdabos/acidbase.git",
+    "acidbase @ git+https://github.com/jurdabos/acidbase.git@v0.3.0",
     "anyio>=4.14.2",
     "brotli>=1.2.1",
     "certifi>=2026.10.18",
